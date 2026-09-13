@@ -37,14 +37,9 @@ $$
 The central quantity is therefore
 
 $$
-\boxed{
-\Delta(t)
-=
-C[\Phi_{\mathrm{micro}}(t,X_0)]
--
-\Phi_{\mathrm{eff}}(t,C[X_0])
-}
+\boxed{\Delta(t) = C[\Phi_{\mathrm{micro}}(t,X_0)] - \Phi_{\mathrm{eff}}(t,C[X_0])}
 $$
+
 
 We call this the **scale-boundary discrepancy**.
 
