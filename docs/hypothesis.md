@@ -462,15 +462,7 @@ A later stage of the project may investigate whether a proposed underlying mediu
 Schematically,
 
 $$
-\frac{\partial u}{\partial t}
-+
-(u\cdot\nabla)u
-=
--\frac{1}{\rho}\nabla p
-+
-\nu\nabla^2u
-+
-R_{\mathrm{medium}}.
+\frac{\partial u}{\partial t} + (u\cdot\nabla)u = -\frac{1}{\rho}\nabla p + \nu\nabla^2u + R_{\mathrm{medium}}.
 $$
 
 The key question would not be whether an arbitrary correction can be invented to remove a singularity.
