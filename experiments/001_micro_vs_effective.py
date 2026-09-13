@@ -46,7 +46,7 @@ import numpy as np
 
 # without requiring the package to be installed first.
 
-ROOT = Path(**file**).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 
 if str(SRC) not in sys.path:
