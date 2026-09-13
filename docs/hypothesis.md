@@ -12,7 +12,7 @@ We ask:
 
 > Does coarse-graining commute with physical evolution?
 
-In mathematical form, consider a microscopic state \(X\), microscopic dynamics \(\Phi_{\mathrm{micro}}\), a coarse-graining map \(C\), and an effective dynamical model \(\Phi_{\mathrm{eff}}\).
+In mathematical form, consider a microscopic state $$\(X\)$$, microscopic dynamics $$\(\Phi_{\mathrm{micro}}\)$$, a coarse-graining map $$\(C\)$$, and an effective dynamical model $$\(\Phi_{\mathrm{eff}}\)$$.
 
 The two possible routes are
 
