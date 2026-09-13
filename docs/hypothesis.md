@@ -189,11 +189,7 @@ The effective dynamics may therefore require terms that become important only ne
 Schematically,
 
 $$
-\frac{\partial H}{\partial t}
-=
-F_{\mathrm{eff}}[H]
-+
-R(H,L,\xi),
+\frac{\partial H}{\partial t} = F_{\mathrm{eff}}[H] + R(H,L,\xi)
 $$
 
 where \(L\) represents characteristic scale.
