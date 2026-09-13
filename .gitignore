@@ -1,0 +1,37 @@
+# Python
+
+**pycache**/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+
+.venv/
+venv/
+env/
+
+# Packaging
+
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+# Logs
+
+*.log
+
+# Operating system
+
+.DS_Store
+Thumbs.db
+
+# Editors
+
+.vscode/
+.idea/
