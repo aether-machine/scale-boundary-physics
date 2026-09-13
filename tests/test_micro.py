@@ -63,9 +63,12 @@ result = acceleration(
     beta=0.0,
 )
 
-expected = np.array(
-    [-2.0, 1.0, 0.0, 1.0]
-)
+expected = np.array([
+    -2.0,
+    1.0,
+    0.0,
+    1.0,
+])
 
 np.testing.assert_allclose(result, expected)
 ```
