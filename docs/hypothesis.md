@@ -174,12 +174,9 @@ The discrepancy is therefore a failure of the effective equation rather than of 
 Schematically,
 
 $$
-\frac{\partial H}{\partial t}
-=
-F_{\mathrm{eff}}[H]
-+
-R[H,\xi],
+\frac{\partial H}{\partial t} = F_{\mathrm{eff}}[H] + R[H,\xi]
 $$
+
 
 where \(\xi\) represents information discarded during coarse-graining.
 
