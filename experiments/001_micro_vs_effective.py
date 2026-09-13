@@ -1,86 +1,66 @@
 """
-Experiment 001: Microscopic dynamics vs. effective dynamics
+Experiment 001: Microscopic dynamics versus effective dynamics.
 
-Purpose
--------
-Test whether coarse-graining and dynamical evolution approximately commute.
+This experiment compares two routes from the same initial condition:
 
-We compare two independently evolved descriptions of the same initial system:
+```
+Route A:
+    X0 -> microscopic evolution -> coarse-graining
 
-    Route A: microscopic evolution, then coarse-graining
+Route B:
+    X0 -> coarse-graining -> effective evolution
+```
 
-        X0 -> Phi_micro(t) -> X(t) -> C[X(t)]
+The discrepancy between the two routes is
 
-    Route B: coarse-grain first, then evolve an effective model
+```
+Delta(t) =
+    C[Phi_micro(t, X0)]
+    -
+    Phi_eff(t, C[X0])
+```
 
-        X0 -> C[X0] -> H0 -> Phi_eff(t) -> H(t)
+The purpose of this first experiment is methodological. It tests
+whether the computational framework can measure a difference between
+microscopic evolution and independently evolved coarse dynamics.
 
-The central diagnostic is
-
-    Delta(t) = C[X(t)] - H(t)
-
-where Delta measures the failure of the two routes to agree.
-
-This is deliberately a toy model. It is NOT intended to model Navier-Stokes
-directly. Its purpose is methodological: establish a clean computational
-framework in which scale transitions can be measured before introducing
-fluid dynamics or a proposed underlying-medium theory.
-
-Microscopic model
------------------
-A periodic one-dimensional lattice of nonlinear oscillators:
-
-    d q_i / dt = p_i
-
-    d p_i / dt = -k (2 q_i - q_{i-1} - q_{i+1})
-                 - omega0^2 q_i
-                 - beta q_i^3
-
-The cubic term makes the microscopic dynamics nonlinear.
-
-Coarse-graining
----------------
-The microscopic lattice is divided into blocks.
-
-For each block we retain:
-
-    Q = mean(q_i)
-    P = mean(p_i)
-
-The effective model evolves those block variables using the same structural
-form of the lattice equation, but on the reduced coarse lattice.
-
-Important:
-The effective model is NOT obtained by continuing the microscopic trajectory.
-It is evolved independently from the coarse initial condition.
-
-Outputs
--------
-The script produces:
-
-    results/experiment_001_delta.png
-    results/experiment_001_states.png
-    results/experiment_001_summary.txt
-
-The first plot shows the coarse-graining/evolution discrepancy.
-
-The second plot compares one representative coarse variable obtained by
-the two routes.
-
-The experiment also prints a summary of the discrepancy.
+The effective model used here is deliberately simple and is NOT
+derived from the microscopic model. That distinction is important:
+this experiment establishes the measurement framework, not a claim
+about the correct coarse-grained physics.
 """
 
-from __future__ import annotations
-
-import math
 from pathlib import Path
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Allow the experiment to be run directly from the repository root:
+
+#
+
+# python experiments/001_micro_vs_effective.py
+
+#
+
+# without requiring the package to be installed first.
+
+ROOT = Path(**file**).resolve().parents[1]
+SRC = ROOT / "src"
+
+if str(SRC) not in sys.path:
+sys.path.insert(0, str(SRC))
+
+from scale_boundary.coarse_grain import coarse_grain
+from scale_boundary.effective import rk4_step as effective_rk4_step
+from scale_boundary.metrics import state_discrepancy, summarize_discrepancy
+from scale_boundary.micro import rhs as micro_rhs
 
 # ---------------------------------------------------------------------------
-# Configuration
+
+# Experiment configuration
+
 # ---------------------------------------------------------------------------
 
 N_MICRO = 128
@@ -94,455 +74,355 @@ K = 1.0
 OMEGA0_SQ = 0.5
 BETA = 0.25
 
-# Initial condition parameters
 AMPLITUDE = 0.8
 WAVELENGTHS = 4
 
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / "results"
-
-
-# ---------------------------------------------------------------------------
-# Microscopic model
 # ---------------------------------------------------------------------------
 
-def acceleration(q: np.ndarray, k: float, omega0_sq: float, beta: float) -> np.ndarray:
-    """
-    Calculate acceleration for a periodic nonlinear oscillator lattice.
-
-    Periodic boundary conditions are implemented with np.roll().
-    """
-    neighbour_term = 2.0 * q - np.roll(q, 1) - np.roll(q, -1)
-
-    return (
-        -k * neighbour_term
-        - omega0_sq * q
-        - beta * q**3
-    )
-
-
-def rhs(
-    q: np.ndarray,
-    p: np.ndarray,
-    k: float,
-    omega0_sq: float,
-    beta: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return dq/dt and dp/dt."""
-    dqdt = p
-    dpdt = acceleration(q, k, omega0_sq, beta)
-
-    return dqdt, dpdt
-
+# Numerical integration
 
 # ---------------------------------------------------------------------------
-# Time integration
-# ---------------------------------------------------------------------------
 
-def rk4_step(
-    q: np.ndarray,
-    p: np.ndarray,
-    dt: float,
-    k: float,
-    omega0_sq: float,
-    beta: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    One fourth-order Runge-Kutta step.
+def micro_rk4_step(q, p, dt):
+"""Advance the microscopic system by one RK4 step."""
 
-    Both microscopic and effective systems use the same integrator, but
-    they are evolved independently.
-    """
+```
+k1_q, k1_p = micro_rhs(
+    q,
+    p,
+    k=K,
+    omega0_sq=OMEGA0_SQ,
+    beta=BETA,
+)
 
-    k1_q, k1_p = rhs(q, p, k, omega0_sq, beta)
+k2_q, k2_p = micro_rhs(
+    q + 0.5 * dt * k1_q,
+    p + 0.5 * dt * k1_p,
+    k=K,
+    omega0_sq=OMEGA0_SQ,
+    beta=BETA,
+)
 
-    k2_q, k2_p = rhs(
-        q + 0.5 * dt * k1_q,
-        p + 0.5 * dt * k1_p,
-        k,
-        omega0_sq,
-        beta,
-    )
+k3_q, k3_p = micro_rhs(
+    q + 0.5 * dt * k2_q,
+    p + 0.5 * dt * k2_p,
+    k=K,
+    omega0_sq=OMEGA0_SQ,
+    beta=BETA,
+)
 
-    k3_q, k3_p = rhs(
-        q + 0.5 * dt * k2_q,
-        p + 0.5 * dt * k2_p,
-        k,
-        omega0_sq,
-        beta,
-    )
+k4_q, k4_p = micro_rhs(
+    q + dt * k3_q,
+    p + dt * k3_p,
+    k=K,
+    omega0_sq=OMEGA0_SQ,
+    beta=BETA,
+)
 
-    k4_q, k4_p = rhs(
-        q + dt * k3_q,
-        p + dt * k3_p,
-        k,
-        omega0_sq,
-        beta,
-    )
+q_next = q + (dt / 6.0) * (
+    k1_q + 2.0 * k2_q + 2.0 * k3_q + k4_q
+)
 
-    q_new = q + (dt / 6.0) * (
-        k1_q + 2.0 * k2_q + 2.0 * k3_q + k4_q
-    )
+p_next = p + (dt / 6.0) * (
+    k1_p + 2.0 * k2_p + 2.0 * k3_p + k4_p
+)
 
-    p_new = p + (dt / 6.0) * (
-        k1_p + 2.0 * k2_p + 2.0 * k3_p + k4_p
-    )
-
-    return q_new, p_new
-
+return q_next, p_next
+```
 
 # ---------------------------------------------------------------------------
-# Coarse-graining
-# ---------------------------------------------------------------------------
 
-def coarse_grain(
-    q: np.ndarray,
-    p: np.ndarray,
-    block_size: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Coarse-grain the microscopic state by block averaging.
-
-    The microscopic lattice is reshaped into blocks:
-
-        [block 0]
-        [block 1]
-        ...
-
-    and the mean q and p values are retained.
-
-    This deliberately discards all intra-block structure.
-    """
-
-    n = len(q)
-
-    if n % block_size != 0:
-        raise ValueError("Number of microscopic sites must divide evenly.")
-
-    n_blocks = n // block_size
-
-    q_blocks = q.reshape(n_blocks, block_size)
-    p_blocks = p.reshape(n_blocks, block_size)
-
-    Q = q_blocks.mean(axis=1)
-    P = p_blocks.mean(axis=1)
-
-    return Q, P
-
-
-# ---------------------------------------------------------------------------
 # Initial condition
-# ---------------------------------------------------------------------------
-
-def initial_condition(n: int) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Construct a smooth microscopic initial condition.
-
-    A low-frequency wave is used so that the initial coarse description
-    captures most of the visible structure.
-
-    A small higher-frequency perturbation is added. This is important:
-    the microscopic state contains information that the coarse state does
-    not retain.
-    """
-
-    x = np.arange(n)
-
-    low_mode = AMPLITUDE * np.sin(
-        2.0 * math.pi * WAVELENGTHS * x / n
-    )
-
-    high_mode = 0.15 * np.sin(
-        2.0 * math.pi * (WAVELENGTHS * 8) * x / n
-    )
-
-    q0 = low_mode + high_mode
-
-    # Initial momentum is chosen to be zero.
-    p0 = np.zeros_like(q0)
-
-    return q0, p0
-
 
 # ---------------------------------------------------------------------------
-# Simulation
+
+def initial_condition(n):
+"""
+Construct the microscopic initial condition.
+
+```
+A low-frequency mode provides the large-scale structure.
+A smaller high-frequency perturbation introduces unresolved
+structure within the coarse blocks.
+"""
+
+x = np.arange(n)
+
+low_frequency = AMPLITUDE * np.sin(
+    2.0 * np.pi * WAVELENGTHS * x / n
+)
+
+high_frequency = 0.1 * np.sin(
+    2.0 * np.pi * (WAVELENGTHS * 8) * x / n
+)
+
+q0 = low_frequency + high_frequency
+p0 = np.zeros_like(q0)
+
+return q0, p0
+```
+
+# ---------------------------------------------------------------------------
+
+# Main experiment
+
 # ---------------------------------------------------------------------------
 
 def run_experiment():
-    """
-    Run the two routes independently.
+"""Run Experiment 001 and return recorded results."""
 
-    Route A
-    -------
-        microscopic evolution -> coarse-graining
+```
+q_micro, p_micro = initial_condition(N_MICRO)
 
-    Route B
-    -------
-        coarse initial condition -> independent effective evolution
-    """
+# Route B begins by coarse-graining the initial microscopic state.
+q_effective, p_effective = coarse_grain(
+    q_micro,
+    p_micro,
+    BLOCK_SIZE,
+)
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+initial_q_effective = q_effective.copy()
+initial_p_effective = p_effective.copy()
 
-    q_micro, p_micro = initial_condition(N_MICRO)
+n_steps = int(round(T_FINAL / DT))
 
-    # ---------------------------------------------------------------
-    # Construct the coarse initial state ONCE.
-    #
-    # This is the only information Route B receives from the
-    # microscopic initial condition.
-    # ---------------------------------------------------------------
+times = np.empty(n_steps + 1)
 
-    Q0, P0 = coarse_grain(
+q_discrepancy = np.empty(n_steps + 1)
+p_discrepancy = np.empty(n_steps + 1)
+combined_discrepancy = np.empty(n_steps + 1)
+
+micro_coarse_history = []
+effective_history = []
+
+# At t = 0 both routes are identical by construction.
+q_micro_coarse, p_micro_coarse = coarse_grain(
+    q_micro,
+    p_micro,
+    BLOCK_SIZE,
+)
+
+dq, dp, dcombined = state_discrepancy(
+    q_micro_coarse,
+    p_micro_coarse,
+    q_effective,
+    p_effective,
+)
+
+times[0] = 0.0
+q_discrepancy[0] = dq
+p_discrepancy[0] = dp
+combined_discrepancy[0] = dcombined
+
+micro_coarse_history.append(q_micro_coarse.copy())
+effective_history.append(q_effective.copy())
+
+for step in range(1, n_steps + 1):
+
+    # Route A:
+    # evolve the microscopic state, then coarse-grain it.
+    q_micro, p_micro = micro_rk4_step(
+        q_micro,
+        p_micro,
+        DT,
+    )
+
+    # Route B:
+    # evolve the already-coarse-grained state independently.
+    q_effective, p_effective = effective_rk4_step(
+        q_effective,
+        p_effective,
+        DT,
+        k=K,
+        omega0_sq=OMEGA0_SQ,
+        beta=BETA,
+    )
+
+    q_micro_coarse, p_micro_coarse = coarse_grain(
         q_micro,
         p_micro,
         BLOCK_SIZE,
     )
 
-    # ---------------------------------------------------------------
-    # Effective system.
-    #
-    # It has N_COARSE degrees of freedom and evolves independently.
-    # ---------------------------------------------------------------
-
-    Q_eff = Q0.copy()
-    P_eff = P0.copy()
-
-    times = []
-    delta_q_norm = []
-    delta_p_norm = []
-    delta_total = []
-
-    micro_history = []
-    effective_history = []
-
-    n_steps = int(round(T_FINAL / DT))
-
-    sample_every = max(1, n_steps // 1000)
-
-    for step in range(n_steps + 1):
-
-        t = step * DT
-
-        # -----------------------------------------------------------
-        # Route A:
-        #
-        # Continue microscopic evolution.
-        # Then coarse-grain the resulting microscopic state.
-        # -----------------------------------------------------------
-
-        Q_from_micro, P_from_micro = coarse_grain(
-            q_micro,
-            p_micro,
-            BLOCK_SIZE,
-        )
-
-        # -----------------------------------------------------------
-        # Route B:
-        #
-        # Q_eff and P_eff have been evolving independently.
-        # -----------------------------------------------------------
-
-        if step % sample_every == 0:
-
-            # -------------------------------------------------------
-            # Difference between the two descriptions.
-            # -------------------------------------------------------
-
-            dq = Q_from_micro - Q_eff
-            dp = P_from_micro - P_eff
-
-            q_error = np.linalg.norm(dq) / math.sqrt(N_COARSE)
-            p_error = np.linalg.norm(dp) / math.sqrt(N_COARSE)
-
-            total_error = math.sqrt(
-                q_error**2 + p_error**2
-            )
-
-            times.append(t)
-            delta_q_norm.append(q_error)
-            delta_p_norm.append(p_error)
-            delta_total.append(total_error)
-
-            # Save states for later visualization.
-            micro_history.append(Q_from_micro.copy())
-            effective_history.append(Q_eff.copy())
-
-        # -----------------------------------------------------------
-        # Advance BOTH systems.
-        #
-        # These are separate calls with separate state variables.
-        # There is no feedback from Route A into Route B.
-        # -----------------------------------------------------------
-
-        if step < n_steps:
-
-            q_micro, p_micro = rk4_step(
-                q_micro,
-                p_micro,
-                DT,
-                K,
-                OMEGA0_SQ,
-                BETA,
-            )
-
-            Q_eff, P_eff = rk4_step(
-                Q_eff,
-                P_eff,
-                DT,
-                K,
-                OMEGA0_SQ,
-                BETA,
-            )
-
-    times = np.asarray(times)
-    delta_q_norm = np.asarray(delta_q_norm)
-    delta_p_norm = np.asarray(delta_p_norm)
-    delta_total = np.asarray(delta_total)
-
-    micro_history = np.asarray(micro_history)
-    effective_history = np.asarray(effective_history)
-
-    # ----------------------------------------------------------------
-    # Diagnostics
-    # ----------------------------------------------------------------
-
-    max_error = float(np.max(delta_total))
-    final_error = float(delta_total[-1])
-
-    peak_time = float(times[np.argmax(delta_total)])
-
-    initial_error = float(delta_total[0])
-
-    summary = f"""
-Experiment 001: Microscopic vs. Effective Dynamics
-====================================================
-
-Microscopic sites:       {N_MICRO}
-Coarse blocks:            {N_COARSE}
-Block size:               {BLOCK_SIZE}
-
-Time step:                {DT}
-Final time:               {T_FINAL}
-
-Model parameters
-----------------
-k:                        {K}
-omega0^2:                 {OMEGA0_SQ}
-beta:                     {BETA}
-
-Discrepancy
------------
-Initial Delta norm:       {initial_error:.8e}
-Final Delta norm:         {final_error:.8e}
-Maximum Delta norm:       {max_error:.8e}
-Time of maximum Delta:    {peak_time:.6f}
-
-Interpretation
---------------
-The two routes begin from the same microscopic initial condition,
-but Route B only receives the block-averaged initial state.
-
-Therefore any subsequent disagreement is information that is available
-to the microscopic dynamics but absent from the coarse representation.
-
-This experiment does NOT establish that a physical singularity is caused
-by coarse-graining. It establishes a computational framework for measuring
-the non-commutativity of coarse-graining and dynamical evolution.
-
-Next steps should investigate whether the discrepancy correlates with
-a physically meaningful scale parameter such as wavelength, block size,
-or an analogue of the Knudsen number.
-"""
-
-    print(summary)
-
-    with open(
-        OUTPUT_DIR / "experiment_001_summary.txt",
-        "w",
-        encoding="utf-8",
-    ) as f:
-        f.write(summary)
-
-    # ----------------------------------------------------------------
-    # Plot 1: discrepancy
-    # ----------------------------------------------------------------
-
-    plt.figure(figsize=(9, 5))
-
-    plt.plot(
-        times,
-        delta_total,
-        label=r"$\|\Delta(t)\|$",
+    dq, dp, dcombined = state_discrepancy(
+        q_micro_coarse,
+        p_micro_coarse,
+        q_effective,
+        p_effective,
     )
 
-    plt.plot(
-        times,
-        delta_q_norm,
-        label=r"$\|\Delta_Q(t)\|$",
-    )
+    times[step] = step * DT
 
-    plt.plot(
-        times,
-        delta_p_norm,
-        label=r"$\|\Delta_P(t)\|$",
-    )
+    q_discrepancy[step] = dq
+    p_discrepancy[step] = dp
+    combined_discrepancy[step] = dcombined
 
-    plt.xlabel("Time")
-    plt.ylabel("RMS discrepancy")
-    plt.title("Failure of coarse-graining and evolution to commute")
-    plt.legend()
-    plt.tight_layout()
+    micro_coarse_history.append(q_micro_coarse.copy())
+    effective_history.append(q_effective.copy())
 
-    plt.savefig(
-        OUTPUT_DIR / "experiment_001_delta.png",
-        dpi=150,
-    )
+micro_coarse_history = np.asarray(micro_coarse_history)
+effective_history = np.asarray(effective_history)
 
-    plt.close()
+summary = summarize_discrepancy(
+    times,
+    combined_discrepancy,
+)
 
-    # ----------------------------------------------------------------
-    # Plot 2: representative coarse variable
-    # ----------------------------------------------------------------
+return {
+    "times": times,
+    "q_discrepancy": q_discrepancy,
+    "p_discrepancy": p_discrepancy,
+    "combined_discrepancy": combined_discrepancy,
+    "micro_coarse_history": micro_coarse_history,
+    "effective_history": effective_history,
+    "initial_q_effective": initial_q_effective,
+    "initial_p_effective": initial_p_effective,
+    "summary": summary,
+}
+```
 
-    representative_block = 0
+# ---------------------------------------------------------------------------
 
-    plt.figure(figsize=(9, 5))
+# Output
 
-    plt.plot(
-        times,
-        micro_history[:, representative_block],
-        label="Route A: microscopic → coarse",
-    )
+# ---------------------------------------------------------------------------
 
-    plt.plot(
-        times,
-        effective_history[:, representative_block],
-        "--",
-        label="Route B: coarse → effective",
-    )
+def save_outputs(results):
+"""Save figures and a text summary to the results directory."""
 
-    plt.xlabel("Time")
-    plt.ylabel("Coarse displacement")
-    plt.title(
-        f"Representative coarse variable "
-        f"(block {representative_block})"
-    )
-    plt.legend()
-    plt.tight_layout()
+```
+results_dir = ROOT / "results"
+results_dir.mkdir(exist_ok=True)
 
-    plt.savefig(
-        OUTPUT_DIR / "experiment_001_states.png",
-        dpi=150,
-    )
+times = results["times"]
+q_discrepancy = results["q_discrepancy"]
+p_discrepancy = results["p_discrepancy"]
+combined_discrepancy = results["combined_discrepancy"]
 
-    plt.close()
+micro_history = results["micro_coarse_history"]
+effective_history = results["effective_history"]
 
-    return {
-        "times": times,
-        "delta_total": delta_total,
-        "delta_q": delta_q_norm,
-        "delta_p": delta_p_norm,
-    }
+summary = results["summary"]
 
+# ---------------------------------------------------------------
+# Figure 1: discrepancy
+# ---------------------------------------------------------------
 
-if __name__ == "__main__":
-    run_experiment()
+plt.figure(figsize=(10, 6))
+
+plt.plot(
+    times,
+    q_discrepancy,
+    label="q RMS discrepancy",
+)
+
+plt.plot(
+    times,
+    p_discrepancy,
+    label="p RMS discrepancy",
+)
+
+plt.plot(
+    times,
+    combined_discrepancy,
+    label="combined discrepancy",
+)
+
+plt.xlabel("Time")
+plt.ylabel("Discrepancy")
+plt.title("Experiment 001: Coarse-Graining / Evolution Discrepancy")
+plt.legend()
+plt.tight_layout()
+
+plt.savefig(
+    results_dir / "experiment_001_delta.png",
+    dpi=150,
+)
+
+plt.close()
+
+# ---------------------------------------------------------------
+# Figure 2: final coarse states
+# ---------------------------------------------------------------
+
+plt.figure(figsize=(10, 6))
+
+coarse_x = np.arange(N_COARSE)
+
+plt.plot(
+    coarse_x,
+    micro_history[-1],
+    label="coarse-grained microscopic state",
+)
+
+plt.plot(
+    coarse_x,
+    effective_history[-1],
+    "--",
+    label="effective state",
+)
+
+plt.xlabel("Coarse position")
+plt.ylabel("q")
+plt.title("Experiment 001: Final Coarse States")
+plt.legend()
+plt.tight_layout()
+
+plt.savefig(
+    results_dir / "experiment_001_states.png",
+    dpi=150,
+)
+
+plt.close()
+
+# ---------------------------------------------------------------
+# Text summary
+# ---------------------------------------------------------------
+
+summary_path = results_dir / "experiment_001_summary.txt"
+
+with summary_path.open("w", encoding="utf-8") as f:
+    f.write("Experiment 001: Micro vs Effective\n")
+    f.write("===================================\n\n")
+
+    f.write(f"Microscopic sites: {N_MICRO}\n")
+    f.write(f"Block size: {BLOCK_SIZE}\n")
+    f.write(f"Coarse sites: {N_COARSE}\n")
+    f.write(f"Time step: {DT}\n")
+    f.write(f"Final time: {T_FINAL}\n\n")
+
+    f.write("Model parameters\n")
+    f.write("----------------\n")
+    f.write(f"k = {K}\n")
+    f.write(f"omega0^2 = {OMEGA0_SQ}\n")
+    f.write(f"beta = {BETA}\n\n")
+
+    f.write("Discrepancy summary\n")
+    f.write("-------------------\n")
+    f.write(f"Initial: {summary.initial:.10e}\n")
+    f.write(f"Final: {summary.final:.10e}\n")
+    f.write(f"Maximum: {summary.maximum:.10e}\n")
+    f.write(f"Mean: {summary.mean:.10e}\n")
+    f.write(f"Time of maximum: {summary.time_of_maximum:.10e}\n")
+```
+
+# ---------------------------------------------------------------------------
+
+# Entry point
+
+# ---------------------------------------------------------------------------
+
+if **name** == "**main**":
+results = run_experiment()
+save_outputs(results)
+
+```
+summary = results["summary"]
+
+print("Experiment 001 complete.")
+print(f"Initial discrepancy: {summary.initial:.6e}")
+print(f"Final discrepancy:   {summary.final:.6e}")
+print(f"Maximum discrepancy: {summary.maximum:.6e}")
+print(f"Time of maximum:     {summary.time_of_maximum:.6e}")
+print("Results written to: results/")
+```
