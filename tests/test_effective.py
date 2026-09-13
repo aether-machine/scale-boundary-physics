@@ -135,9 +135,7 @@ assert dpdt.shape == p.shape
 ```
 
 def test_rk4_zero_state_remains_zero():
-"""
-A zero state should remain unchanged under RK4 integration.
-"""
+"""A zero state should remain unchanged under RK4 integration."""
 
 ```
 q = np.zeros(8)
@@ -176,15 +174,15 @@ assert q_next.shape == q.shape
 assert p_next.shape == p.shape
 ```
 
-def test_rk4_is_reversible_to_first_order_for_small_step():
+def test_rk4_is_consistent_for_small_step():
 """
-A forward Euler-like first-order consistency check:
+For sufficiently small dt,
 
 ```
-    Q(t + dt) = Q(t) + dt * P(t) + O(dt^2)
+    Q(t + dt) = Q(t) + dt * P(t) + O(dt^2).
 
-For sufficiently small dt, the RK4 result should therefore agree
-closely with this first-order prediction.
+RK4 should therefore agree closely with this first-order
+prediction for a sufficiently small timestep.
 """
 
 q = np.array([
