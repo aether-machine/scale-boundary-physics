@@ -94,10 +94,11 @@ $$
 \boxed{
 \Delta_t =
 C[\Phi_{\rm micro}(t)X_0]
--
+\;-\;
 \Phi_{\rm eff}(t)C[X_0]
 }
 $$
+
 
 and call it the **representation-transition error**.
 
