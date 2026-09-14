@@ -9,44 +9,40 @@ Experiment 005b survives spatial grid refinement.
 The experiment varies:
 
     NX              spatial resolution
-    spatial_mode    perturbation wavenumber k
-    epsilon         Knudsen-like scale ratio
+    spatial_mode    physical perturbation wavenumber k
+    epsilon         relaxation-scale ratio
 
 with
 
-    L = DOMAIN_LENGTH / spatial_mode
+    L   = DOMAIN_LENGTH / spatial_mode
     tau = epsilon * L / REFERENCE_SPEED
 
-The important methodological point is that spatial_mode now controls
-the actual wavelength of the initial perturbation:
+The spatial mode is part of the actual initial condition. Therefore,
+unlike the earlier version of this experiment, changing spatial_mode
+really changes the physical wavelength being represented.
 
-    wavelength = DOMAIN_LENGTH / spatial_mode
+The experiment compares two kinetic states which have identical
+hydrodynamic moments initially but differ in higher-order velocity-space
+structure.
 
-so the scale parameter L corresponds to a physical feature of the
-initial condition rather than merely changing the relaxation time.
+The central diagnostic is whether that hidden kinetic difference produces
+different subsequent hydrodynamic evolution.
 
-The experiment compares two microscopic states that have identical
-initial
-hydrodynamic moments but differ in higher-order velocity-space structure.
-
-If the resulting hydrodynamic discrepancy persists under spatial grid
-refinement, that provides stronger evidence that the effect is not
-simply a spatial discretization artifact.
-
-This remains a toy BGK kinetic model, not a derivation of Navier-Stokes.
+This is a controlled numerical experiment in a toy BGK kinetic model.
+It is NOT a derivation of Navier-Stokes and should not be interpreted
+as one.
 """
 
 from pathlib import Path
-
 import csv
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Configuration
-# ---------------------------------------------------------------------
+# =====================================================================
 
 NX_VALUES = [128, 256, 512]
 
@@ -68,44 +64,49 @@ EPSILON_TARGETS = [0.01, 0.05, 0.10]
 
 HIDDEN_AMPLITUDE = 0.35
 
-OUTPUT_DIR = Path("results/005c_grid_convergence")
+OUTPUT_DIR = Path(
+    "results/005c_grid_convergence"
+)
 
 
-# ---------------------------------------------------------------------
-# Numerical utilities
-# ---------------------------------------------------------------------
-
+# =====================================================================
+# Grids
+# =====================================================================
 
 def velocity_grid():
     """
-    Construct a periodic velocity grid.
-
-    The endpoint is excluded so that the grid spacing is uniform.
+    Return the one-dimensional velocity grid and velocity spacing.
     """
 
-    dv = (V_MAX - V_MIN) / NV
+    dv = (
+        V_MAX - V_MIN
+    ) / NV
 
-    v = V_MIN + dv * np.arange(NV)
+    v = (
+        V_MIN
+        + dv * np.arange(NV)
+    )
 
     return v, dv
 
 
 def spatial_grid(nx):
     """
-    Construct a periodic spatial grid.
+    Return the periodic spatial grid and spatial spacing.
     """
 
-    dx = DOMAIN_LENGTH / nx
+    dx = (
+        DOMAIN_LENGTH / nx
+    )
 
     x = dx * np.arange(nx)
 
     return x, dx
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Maxwellian
-# ---------------------------------------------------------------------
-
+# =====================================================================
 
 def maxwellian(
     density,
@@ -114,38 +115,91 @@ def maxwellian(
     v,
 ):
     """
-    Construct a 1-D Maxwellian in velocity space.
+    Construct a local Maxwellian.
 
     Parameters
     ----------
     density:
-        Spatial density array.
+        Shape (NX,)
 
     velocity:
-        Spatial mean velocity array.
+        Shape (NX,)
 
     temperature:
-        Spatial temperature array.
+        Shape (NX,)
 
     v:
-        1-D velocity grid.
+        Shape (NV,)
 
     Returns
     -------
     f:
-        Distribution with shape (NX, NV).
+        Shape (NX, NV)
     """
 
-    density = np.asarray(density)
-    velocity = np.asarray(velocity)
-    temperature = np.asarray(temperature)
+    density = np.asarray(
+        density,
+        dtype=float,
+    )
+
+    velocity = np.asarray(
+        velocity,
+        dtype=float,
+    )
+
+    temperature = np.asarray(
+        temperature,
+        dtype=float,
+    )
+
+    v = np.asarray(
+        v,
+        dtype=float,
+    )
+
+    if density.ndim != 1:
+        raise ValueError(
+            "density must be 1-D. "
+            f"Received shape {density.shape}."
+        )
+
+    if velocity.ndim != 1:
+        raise ValueError(
+            "velocity must be 1-D. "
+            f"Received shape {velocity.shape}."
+        )
+
+    if temperature.ndim != 1:
+        raise ValueError(
+            "temperature must be 1-D. "
+            f"Received shape {temperature.shape}."
+        )
+
+    if v.ndim != 1:
+        raise ValueError(
+            "v must be 1-D. "
+            f"Received shape {v.shape}."
+        )
+
+    if not (
+        len(density)
+        == len(velocity)
+        == len(temperature)
+    ):
+        raise ValueError(
+            "Macroscopic fields must have "
+            "the same spatial length."
+        )
 
     temperature = np.maximum(
         temperature,
-        1.0e-8,
+        1.0e-10,
     )
 
-    dv = v[None, :]
+    velocity_difference = (
+        v[None, :]
+        - velocity[:, None]
+    )
 
     prefactor = (
         density[:, None]
@@ -157,20 +211,23 @@ def maxwellian(
     )
 
     exponent = -(
-        dv
-        - velocity[:, None]
-    ) ** 2 / (
+        velocity_difference ** 2
+    ) / (
         2.0
         * temperature[:, None]
     )
 
-    return prefactor * np.exp(exponent)
+    f = (
+        prefactor
+        * np.exp(exponent)
+    )
+
+    return f
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Hydrodynamic moments
-# ---------------------------------------------------------------------
-
+# =====================================================================
 
 def hydrodynamic_moments(
     f,
@@ -180,14 +237,41 @@ def hydrodynamic_moments(
     """
     Calculate density, velocity and temperature.
 
-    The distribution is assumed to be normalized such that
+    rho       = integral f dv
 
-        rho = integral f dv
+    rho * u   = integral v f dv
 
-        rho*u = integral v*f dv
-
-        rho*(u^2 + T) = integral v^2*f dv
+    rho(u²+T) = integral v² f dv
     """
+
+    f = np.asarray(
+        f,
+        dtype=float,
+    )
+
+    v = np.asarray(
+        v,
+        dtype=float,
+    )
+
+    if f.ndim != 2:
+        raise ValueError(
+            "f must be 2-D with shape "
+            "(NX, NV). "
+            f"Received {f.shape}."
+        )
+
+    if v.ndim != 1:
+        raise ValueError(
+            "v must be 1-D."
+        )
+
+    if f.shape[1] != len(v):
+        raise ValueError(
+            "Velocity dimension mismatch: "
+            f"f has {f.shape[1]} columns, "
+            f"but v has {len(v)} points."
+        )
 
     density = np.sum(
         f * dv,
@@ -206,7 +290,10 @@ def hydrodynamic_moments(
         axis=1,
     )
 
-    velocity = momentum / density_safe
+    velocity = (
+        momentum
+        / density_safe
+    )
 
     second_moment = np.sum(
         f
@@ -216,8 +303,9 @@ def hydrodynamic_moments(
     )
 
     temperature = (
-        second_moment / density_safe
-        - velocity**2
+        second_moment
+        / density_safe
+        - velocity ** 2
     )
 
     temperature = np.maximum(
@@ -239,16 +327,25 @@ def hydrodynamic_difference(
     dv,
 ):
     """
-    Return RMS differences between hydrodynamic moments.
+    Calculate RMS differences between
+    the hydrodynamic moments of two states.
     """
 
-    rho_a, u_a, T_a = hydrodynamic_moments(
+    (
+        rho_a,
+        u_a,
+        T_a,
+    ) = hydrodynamic_moments(
         f_a,
         v,
         dv,
     )
 
-    rho_b, u_b, T_b = hydrodynamic_moments(
+    (
+        rho_b,
+        u_b,
+        T_b,
+    ) = hydrodynamic_moments(
         f_b,
         v,
         dv,
@@ -256,26 +353,35 @@ def hydrodynamic_difference(
 
     density_difference = np.sqrt(
         np.mean(
-            (rho_a - rho_b) ** 2
+            (
+                rho_a
+                - rho_b
+            ) ** 2
         )
     )
 
     velocity_difference = np.sqrt(
         np.mean(
-            (u_a - u_b) ** 2
+            (
+                u_a
+                - u_b
+            ) ** 2
         )
     )
 
     temperature_difference = np.sqrt(
         np.mean(
-            (T_a - T_b) ** 2
+            (
+                T_a
+                - T_b
+            ) ** 2
         )
     )
 
     combined_difference = np.sqrt(
-        density_difference**2
-        + velocity_difference**2
-        + temperature_difference**2
+        density_difference ** 2
+        + velocity_difference ** 2
+        + temperature_difference ** 2
     )
 
     return (
@@ -292,21 +398,25 @@ def kinetic_difference(
     dv,
 ):
     """
-    L2 difference in the full kinetic distribution.
+    L2 difference between two kinetic distributions.
     """
+
+    difference = (
+        f_a
+        - f_b
+    )
 
     return np.sqrt(
         np.sum(
-            (f_a - f_b) ** 2
+            difference ** 2
             * dv
         )
     )
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Moment matching
-# ---------------------------------------------------------------------
-
+# =====================================================================
 
 def match_hydrodynamic_moments(
     f_reference,
@@ -315,34 +425,87 @@ def match_hydrodynamic_moments(
     dv,
 ):
     """
-    Correct f_target so that its density, momentum and second velocity
-    moment match f_reference.
+    Modify f_target so that its density, momentum and second velocity
+    moment match f_reference at every spatial point.
 
-    The velocity coordinate is scaled to approximately [-1, 1] before
-    constructing the moment system. This improves numerical conditioning
-    without changing the resulting moment constraints.
+    The correction is constructed from three basis functions:
+
+        1
+        s
+        s²
+
+    where
+
+        s = v / velocity_scale.
+
+    Scaling the velocity coordinate improves conditioning but does not
+    change the span of the correction basis.
     """
 
+    if f_reference.shape != f_target.shape:
+        raise ValueError(
+            "Reference and target distributions "
+            "must have identical shapes."
+        )
+
+    if f_reference.ndim != 2:
+        raise ValueError(
+            "Distributions must be 2-D."
+        )
+
+    if v.ndim != 1:
+        raise ValueError(
+            "v must be 1-D."
+        )
+
+    if f_reference.shape[1] != len(v):
+        raise ValueError(
+            "Distribution velocity dimension "
+            "does not match v."
+        )
+
     velocity_scale = max(
-        float(np.max(np.abs(v))),
+        float(
+            np.max(
+                np.abs(v)
+            )
+        ),
         1.0,
     )
 
-    s = v / velocity_scale
+    s = (
+        v
+        / velocity_scale
+    )
 
-    # Basis functions for the correction.
     basis = np.vstack(
         [
             np.ones_like(s),
             s,
-            s**2,
+            s ** 2,
         ]
     )
 
-    # 3 x 3 moment matrix.
     moment_matrix = (
         basis * dv
     ) @ basis.T
+
+    determinant = np.linalg.det(
+        moment_matrix
+    )
+
+    if not np.isfinite(
+        determinant
+    ):
+        raise ValueError(
+            "Moment matrix is not finite."
+        )
+
+    if abs(determinant) < 1.0e-14:
+        raise ValueError(
+            "Moment matrix is singular "
+            "or nearly singular."
+        )
 
     corrected = np.empty_like(
         f_target
@@ -370,7 +533,7 @@ def match_hydrodynamic_moments(
                 ),
                 np.sum(
                     dv
-                    * s**2
+                    * s ** 2
                     * difference
                 ),
             ],
@@ -385,7 +548,7 @@ def match_hydrodynamic_moments(
         correction = (
             coefficients[0]
             + coefficients[1] * s
-            + coefficients[2] * s**2
+            + coefficients[2] * s ** 2
         )
 
         corrected[i] = (
@@ -396,56 +559,55 @@ def match_hydrodynamic_moments(
     return corrected
 
 
-# ---------------------------------------------------------------------
-# Initial distributions
-# ---------------------------------------------------------------------
-
+# =====================================================================
+# Initial states
+# =====================================================================
 
 def initial_distributions(
     nx,
     spatial_mode,
 ):
     """
-    Construct two kinetic states A and B.
+    Construct the pair of microscopic states used in the experiment.
 
-    State A is a local Maxwellian.
+    State A:
+        local Maxwellian.
 
-    State B contains a higher-order velocity-space perturbation which is
-    then corrected so that density, momentum and second velocity moments
-    initially match state A.
+    State B:
+        same hydrodynamic moments as A, but with an additional
+        higher-order velocity-space perturbation.
 
-    The spatial wavelength of the perturbation is controlled explicitly
-    by spatial_mode.
+    The perturbation has physical spatial wavelength
 
-    wavelength = DOMAIN_LENGTH / spatial_mode
+        L = DOMAIN_LENGTH / spatial_mode.
     """
 
-    x, dx = spatial_grid(nx)
+    x, dx = spatial_grid(
+        nx
+    )
 
     v, dv = velocity_grid()
 
-    X, V = np.meshgrid(
-        x,
-        v,
-        indexing="ij",
-    )
-
     # --------------------------------------------------------------
-    # Macroscopic background state
+    # Macroscopic fields.
+    #
+    # IMPORTANT:
+    # These are functions of x only.
+    # Each therefore has shape (NX,).
     # --------------------------------------------------------------
 
     density = (
         1.0
         + 0.05
         * np.cos(
-            spatial_mode * X
+            spatial_mode * x
         )
     )
 
     velocity = (
         0.35
         * np.sin(
-            spatial_mode * X
+            spatial_mode * x
         )
     )
 
@@ -453,9 +615,16 @@ def initial_distributions(
         1.0
         + 0.05
         * np.cos(
-            spatial_mode * X
+            spatial_mode * x
         )
     )
+
+    # --------------------------------------------------------------
+    # Maxwellian state A.
+    #
+    # maxwellian() performs the required broadcasting internally,
+    # producing shape (NX, NV).
+    # --------------------------------------------------------------
 
     f_a = maxwellian(
         density,
@@ -465,11 +634,15 @@ def initial_distributions(
     )
 
     # --------------------------------------------------------------
-    # Hidden higher-order kinetic structure
+    # Hidden velocity-space structure.
     # --------------------------------------------------------------
 
     velocity_scale = max(
-        float(np.max(np.abs(v))),
+        float(
+            np.max(
+                np.abs(v)
+            )
+        ),
         1.0,
     )
 
@@ -478,15 +651,16 @@ def initial_distributions(
         / velocity_scale
     )
 
-    # Hermite-like fourth-order structure.
     velocity_shape = (
-        c**4
-        - 6.0 * c**2
+        c ** 4
+        - 6.0 * c ** 2
         + 3.0
     )
 
-    spatial_shape = np.cos(
-        spatial_mode * X
+    spatial_shape = (
+        np.cos(
+            spatial_mode * x
+        )[:, None]
     )
 
     hidden = (
@@ -501,17 +675,78 @@ def initial_distributions(
         + hidden
     )
 
-    # Match the hydrodynamic moments exactly.
+    # --------------------------------------------------------------
+    # Moment matching.
     #
-    # IMPORTANT:
-    # The moment matcher receives the 1-D velocity grid v,
-    # not the 2-D mesh V.
+    # v is deliberately one-dimensional here.
+    # --------------------------------------------------------------
+
     f_b = match_hydrodynamic_moments(
         f_a,
         f_b,
         v,
         dv,
     )
+
+    # --------------------------------------------------------------
+    # Strong shape checks.
+    # --------------------------------------------------------------
+
+    expected_shape = (
+        nx,
+        NV,
+    )
+
+    if f_a.shape != expected_shape:
+        raise ValueError(
+            "Initial f_a has incorrect shape: "
+            f"{f_a.shape}; "
+            f"expected {expected_shape}."
+        )
+
+    if f_b.shape != expected_shape:
+        raise ValueError(
+            "Initial f_b has incorrect shape: "
+            f"{f_b.shape}; "
+            f"expected {expected_shape}."
+        )
+
+    # --------------------------------------------------------------
+    # Verify the defining property of the experiment:
+    # the two states should have matching hydrodynamic moments.
+    # --------------------------------------------------------------
+
+    (
+        initial_density_difference,
+        initial_velocity_difference,
+        initial_temperature_difference,
+        initial_combined_difference,
+    ) = hydrodynamic_difference(
+        f_a,
+        f_b,
+        v,
+        dv,
+    )
+
+    tolerance = 1.0e-10
+
+    if (
+        initial_density_difference
+        > tolerance
+        or initial_velocity_difference
+        > tolerance
+        or initial_temperature_difference
+        > tolerance
+    ):
+        raise ValueError(
+            "Moment matching failed.\n"
+            f"density difference = "
+            f"{initial_density_difference:.6e}\n"
+            f"velocity difference = "
+            f"{initial_velocity_difference:.6e}\n"
+            f"temperature difference = "
+            f"{initial_temperature_difference:.6e}"
+        )
 
     return (
         x,
@@ -523,10 +758,9 @@ def initial_distributions(
     )
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Equilibrium
-# ---------------------------------------------------------------------
-
+# =====================================================================
 
 def equilibrium(
     f,
@@ -534,15 +768,17 @@ def equilibrium(
     dv,
 ):
     """
-    Construct the local Maxwellian equilibrium corresponding to f.
+    Construct the local Maxwellian corresponding to f.
     """
 
-    density, velocity, temperature = (
-        hydrodynamic_moments(
-            f,
-            v,
-            dv,
-        )
+    (
+        density,
+        velocity,
+        temperature,
+    ) = hydrodynamic_moments(
+        f,
+        v,
+        dv,
     )
 
     return maxwellian(
@@ -553,10 +789,9 @@ def equilibrium(
     )
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Streaming
-# ---------------------------------------------------------------------
-
+# =====================================================================
 
 def stream_upwind(
     f,
@@ -565,12 +800,33 @@ def stream_upwind(
     dt,
 ):
     """
-    First-order upwind streaming step.
+    First-order upwind spatial streaming.
 
     Periodic boundary conditions are used in x.
     """
 
-    streamed = np.empty_like(f)
+    if f.ndim != 2:
+        raise ValueError(
+            "stream_upwind expects f with "
+            "shape (NX, NV). "
+            f"Received {f.shape}."
+        )
+
+    if v.ndim != 1:
+        raise ValueError(
+            "stream_upwind expects v to be "
+            "one-dimensional."
+        )
+
+    if f.shape[1] != len(v):
+        raise ValueError(
+            "f and v have incompatible "
+            "velocity dimensions."
+        )
+
+    streamed = np.empty_like(
+        f
+    )
 
     for j, velocity in enumerate(v):
 
@@ -580,9 +836,11 @@ def stream_upwind(
 
             streamed[:, j] = (
                 column
-                - velocity
-                * dt
-                / dx
+                - (
+                    velocity
+                    * dt
+                    / dx
+                )
                 * (
                     column
                     - np.roll(
@@ -596,9 +854,11 @@ def stream_upwind(
 
             streamed[:, j] = (
                 column
-                - velocity
-                * dt
-                / dx
+                - (
+                    velocity
+                    * dt
+                    / dx
+                )
                 * (
                     np.roll(
                         column,
@@ -610,15 +870,16 @@ def stream_upwind(
 
         else:
 
-            streamed[:, j] = column
+            streamed[:, j] = (
+                column
+            )
 
     return streamed
 
 
-# ---------------------------------------------------------------------
-# BGK evolution
-# ---------------------------------------------------------------------
-
+# =====================================================================
+# BGK step
+# =====================================================================
 
 def bgk_step(
     f,
@@ -629,14 +890,18 @@ def bgk_step(
     tau,
 ):
     """
-    Advance one BGK kinetic timestep.
+    Advance one BGK timestep.
 
-    The implementation uses operator splitting:
+    Operator splitting:
 
-        streaming
-        +
-        BGK relaxation
+        1. spatial streaming
+        2. local BGK relaxation
     """
+
+    if tau <= 0.0:
+        raise ValueError(
+            "tau must be positive."
+        )
 
     f_streamed = stream_upwind(
         f,
@@ -664,7 +929,8 @@ def bgk_step(
         )
     )
 
-    # Guard against tiny negative numerical values.
+    # Small negative values can arise from the first-order numerical
+    # scheme. Clip them to preserve a non-negative distribution.
     f_new = np.maximum(
         f_new,
         0.0,
@@ -673,10 +939,9 @@ def bgk_step(
     return f_new
 
 
-# ---------------------------------------------------------------------
-# Single experiment
-# ---------------------------------------------------------------------
-
+# =====================================================================
+# One experimental case
+# =====================================================================
 
 def run_case(
     nx,
@@ -684,10 +949,7 @@ def run_case(
     epsilon,
 ):
     """
-    Run one grid / wavelength / epsilon combination.
-
-    Returns a dictionary containing the final and maximum
-    hydrodynamic discrepancies.
+    Run one grid / spatial-scale / epsilon combination.
     """
 
     (
@@ -721,10 +983,16 @@ def run_case(
         )
     )
 
-    initial_kinetic = kinetic_difference(
-        f_a,
-        f_b,
-        dv,
+    # --------------------------------------------------------------
+    # Initial diagnostics
+    # --------------------------------------------------------------
+
+    initial_kinetic = (
+        kinetic_difference(
+            f_a,
+            f_b,
+            dv,
+        )
     )
 
     (
@@ -739,10 +1007,25 @@ def run_case(
         dv,
     )
 
-    max_density = initial_density
-    max_velocity = initial_velocity
-    max_temperature = initial_temperature
-    max_combined = initial_combined
+    max_density = (
+        initial_density
+    )
+
+    max_velocity = (
+        initial_velocity
+    )
+
+    max_temperature = (
+        initial_temperature
+    )
+
+    max_combined = (
+        initial_combined
+    )
+
+    # --------------------------------------------------------------
+    # Time integration
+    # --------------------------------------------------------------
 
     for step in range(
         n_steps
@@ -798,6 +1081,10 @@ def run_case(
             combined_difference,
         )
 
+    # --------------------------------------------------------------
+    # Final diagnostics
+    # --------------------------------------------------------------
+
     (
         final_density,
         final_velocity,
@@ -810,16 +1097,22 @@ def run_case(
         dv,
     )
 
-    final_kinetic = kinetic_difference(
-        f_a,
-        f_b,
-        dv,
+    final_kinetic = (
+        kinetic_difference(
+            f_a,
+            f_b,
+            dv,
+        )
     )
 
     epsilon_actual = (
         tau
         * REFERENCE_SPEED
         / L
+    )
+
+    cells_per_wavelength = (
+        wavelength / dx
     )
 
     return {
@@ -832,30 +1125,51 @@ def run_case(
         "tau": tau,
         "dx": dx,
         "cells_per_wavelength": (
-            wavelength / dx
+            cells_per_wavelength
         ),
-        "initial_kinetic": initial_kinetic,
-        "initial_hydro": initial_combined,
-        "max_density": max_density,
-        "max_velocity": max_velocity,
-        "max_temperature": max_temperature,
-        "max_combined": max_combined,
-        "final_density": final_density,
-        "final_velocity": final_velocity,
-        "final_temperature": final_temperature,
-        "final_combined": final_combined,
-        "final_kinetic": final_kinetic,
+        "initial_kinetic": (
+            initial_kinetic
+        ),
+        "initial_hydro": (
+            initial_combined
+        ),
+        "max_density": (
+            max_density
+        ),
+        "max_velocity": (
+            max_velocity
+        ),
+        "max_temperature": (
+            max_temperature
+        ),
+        "max_combined": (
+            max_combined
+        ),
+        "final_density": (
+            final_density
+        ),
+        "final_velocity": (
+            final_velocity
+        ),
+        "final_temperature": (
+            final_temperature
+        ),
+        "final_combined": (
+            final_combined
+        ),
+        "final_kinetic": (
+            final_kinetic
+        ),
     }
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Experiment driver
-# ---------------------------------------------------------------------
-
+# =====================================================================
 
 def run_experiment():
     """
-    Run the complete grid-convergence experiment.
+    Run all grid / spatial-mode / epsilon combinations.
     """
 
     results = []
@@ -909,10 +1223,8 @@ def run_experiment():
                     "    "
                     f"cells/wavelength="
                     f"{result['cells_per_wavelength']:.2f} "
-                    f""
                     f"final="
                     f"{result['final_combined']:.6f} "
-                    f""
                     f"max="
                     f"{result['max_combined']:.6f}"
                 )
@@ -920,17 +1232,16 @@ def run_experiment():
     return results
 
 
-# ---------------------------------------------------------------------
-# Save tabular results
-# ---------------------------------------------------------------------
-
+# =====================================================================
+# Save CSV
+# =====================================================================
 
 def save_csv(
     results,
     output_path,
 ):
     """
-    Save numerical results to CSV.
+    Save all numerical results as CSV.
     """
 
     if not results:
@@ -960,12 +1271,16 @@ def save_csv(
             )
 
 
+# =====================================================================
+# Save text summary
+# =====================================================================
+
 def save_summary(
     results,
     output_path,
 ):
     """
-    Save a human-readable text summary.
+    Save a human-readable summary.
     """
 
     with open(
@@ -974,26 +1289,11 @@ def save_summary(
     ) as handle:
 
         handle.write(
-            "Experiment 005c: "
-            "Grid convergence\n"
+            "Experiment 005c: Grid convergence\n"
         )
 
         handle.write(
             "====================================\n\n"
-        )
-
-        handle.write(
-            "Purpose\n"
-        )
-
-        handle.write(
-            "-------\n"
-        )
-
-        handle.write(
-            "Test whether kinetic-to-hydrodynamic "
-            "discrepancy persists under spatial "
-            "grid refinement.\n\n"
         )
 
         handle.write(
@@ -1013,12 +1313,16 @@ def save_summary(
         )
 
         handle.write(
-            "epsilon = tau * REFERENCE_SPEED / L\n\n"
+            "epsilon = tau * REFERENCE_SPEED / L\n"
         )
 
         handle.write(
-            "The spatial perturbation itself uses "
-            "spatial_mode, so its wavelength is L.\n\n"
+            "cells_per_wavelength = L / dx\n\n"
+        )
+
+        handle.write(
+            "The spatial mode directly controls the "
+            "wavelength of the initial perturbation.\n\n"
         )
 
         for result in results:
@@ -1027,30 +1331,29 @@ def save_summary(
                 f"NX={result['nx']:4d} "
                 f"k={result['spatial_mode']:2d} "
                 f"epsilon={result['epsilon_target']:.3f} "
-                f"L={result['L']:.6f} "
+                f"L={result['L']:.8f} "
                 f""
                 f"cells/wavelength="
-                f"{result['cells_per_wavelength']:.2f} "
+                f"{result['cells_per_wavelength']:.4f} "
                 f""
                 f"final="
-                f"{result['final_combined']:.8f} "
+                f"{result['final_combined']:.10f} "
                 f""
                 f"max="
-                f"{result['max_combined']:.8f}\n"
+                f"{result['max_combined']:.10f}\n"
             )
 
 
-# ---------------------------------------------------------------------
-# Plotting
-# ---------------------------------------------------------------------
-
+# =====================================================================
+# Plot: grid convergence
+# =====================================================================
 
 def plot_grid_convergence(
     results,
     output_path,
 ):
     """
-    Plot final hydrodynamic discrepancy against spatial resolution.
+    Plot final hydrodynamic discrepancy versus NX.
     """
 
     plt.figure()
@@ -1062,31 +1365,36 @@ def plot_grid_convergence(
             subset = [
                 result
                 for result in results
-                if result["spatial_mode"]
-                == spatial_mode
-                and np.isclose(
-                    result["epsilon_target"],
-                    epsilon,
+                if (
+                    result["spatial_mode"]
+                    == spatial_mode
+                    and np.isclose(
+                        result[
+                            "epsilon_target"
+                        ],
+                        epsilon,
+                    )
                 )
             ]
 
             subset.sort(
-                key=lambda item: item["nx"]
+                key=lambda item:
+                item["nx"]
             )
 
-            nx_values = [
+            x_values = [
                 result["nx"]
                 for result in subset
             ]
 
-            discrepancy = [
+            y_values = [
                 result["final_combined"]
                 for result in subset
             ]
 
             plt.plot(
-                nx_values,
-                discrepancy,
+                x_values,
+                y_values,
                 marker="o",
                 label=(
                     f"k={spatial_mode}, "
@@ -1125,16 +1433,17 @@ def plot_grid_convergence(
     plt.close()
 
 
+# =====================================================================
+# Plot: cells per wavelength
+# =====================================================================
+
 def plot_cells_per_wavelength(
     results,
     output_path,
 ):
     """
-    Plot final discrepancy against cells per wavelength.
-
-    This is often more informative than plotting against NX because
-    the relevant numerical resolution is the number of grid cells
-    resolving the physical perturbation.
+    Plot final discrepancy against the number of cells resolving
+    the physical perturbation wavelength.
     """
 
     plt.figure()
@@ -1145,14 +1454,18 @@ def plot_cells_per_wavelength(
             result
             for result in results
             if np.isclose(
-                result["epsilon_target"],
+                result[
+                    "epsilon_target"
+                ],
                 epsilon,
             )
         ]
 
         subset.sort(
             key=lambda item: (
-                item["spatial_mode"],
+                item[
+                    "spatial_mode"
+                ],
                 item["nx"],
             )
         )
@@ -1174,7 +1487,9 @@ def plot_cells_per_wavelength(
         plt.scatter(
             x_values,
             y_values,
-            label=f"epsilon={epsilon}",
+            label=(
+                f"epsilon={epsilon}"
+            ),
         )
 
     plt.xlabel(
@@ -1206,6 +1521,10 @@ def plot_cells_per_wavelength(
     plt.close()
 
 
+# =====================================================================
+# Plot: physical scale dependence
+# =====================================================================
+
 def plot_scale_dependence(
     results,
     output_path,
@@ -1222,13 +1541,16 @@ def plot_scale_dependence(
             result
             for result in results
             if np.isclose(
-                result["epsilon_target"],
+                result[
+                    "epsilon_target"
+                ],
                 epsilon,
             )
         ]
 
         subset.sort(
-            key=lambda item: item["L"]
+            key=lambda item:
+            item["L"]
         )
 
         wavelengths = [
@@ -1247,7 +1569,9 @@ def plot_scale_dependence(
             wavelengths,
             discrepancies,
             marker="o",
-            label=f"epsilon={epsilon}",
+            label=(
+                f"epsilon={epsilon}"
+            ),
         )
 
     plt.xlabel(
@@ -1279,16 +1603,15 @@ def plot_scale_dependence(
     plt.close()
 
 
-# ---------------------------------------------------------------------
-# Output handling
-# ---------------------------------------------------------------------
-
+# =====================================================================
+# Save outputs
+# =====================================================================
 
 def save_outputs(
     results,
 ):
     """
-    Save CSV, summary and plots.
+    Save CSV, text summary and plots.
     """
 
     OUTPUT_DIR.mkdir(
@@ -1298,34 +1621,38 @@ def save_outputs(
 
     save_csv(
         results,
-        OUTPUT_DIR / "results.csv",
+        OUTPUT_DIR
+        / "results.csv",
     )
 
     save_summary(
         results,
-        OUTPUT_DIR / "summary.txt",
+        OUTPUT_DIR
+        / "summary.txt",
     )
 
     plot_grid_convergence(
         results,
-        OUTPUT_DIR / "grid_convergence.png",
+        OUTPUT_DIR
+        / "grid_convergence.png",
     )
 
     plot_cells_per_wavelength(
         results,
-        OUTPUT_DIR / "cells_per_wavelength.png",
+        OUTPUT_DIR
+        / "cells_per_wavelength.png",
     )
 
     plot_scale_dependence(
         results,
-        OUTPUT_DIR / "scale_dependence.png",
+        OUTPUT_DIR
+        / "scale_dependence.png",
     )
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Main
-# ---------------------------------------------------------------------
-
+# =====================================================================
 
 if __name__ == "__main__":
 
