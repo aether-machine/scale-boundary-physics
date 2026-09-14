@@ -134,48 +134,49 @@ def initial_distributions(nx):
 
 def match_hydrodynamic_moments(f_reference, f_target, v, dv):
     """
-    Correct f_target by a + b*v + c*v^2 so its first three moments
-    match f_reference.
+    Correct f_target so that its density, momentum, and second velocity
+    moment match f_reference.
 
-    The correction is solved independently at every spatial location.
-
-    The moment system is constructed from the velocity grid using
-    np.linalg.solve rather than explicitly computing a matrix inverse.
+    The velocity coordinate is scaled to [-1, 1] before constructing
+    the moment system. This greatly improves numerical conditioning.
     """
 
+    # Scale velocity to approximately [-1, 1].
+    velocity_scale = max(
+        float(np.max(np.abs(v))),
+        1.0,
+    )
+
+    s = v / velocity_scale
+
+    # Basis functions for the correction.
     basis = np.vstack(
         [
-            np.ones_like(v),
-            v,
-            v**2,
+            np.ones_like(s),
+            s,
+            s**2,
         ]
     )
 
-    # Moment matrix:
-    #
-    # M_ij = integral basis_i * basis_j dv
-    #
-    # Construct it directly from the velocity grid.
-    moment_matrix = np.empty((3, 3), dtype=float)
-
-    for i in range(3):
-        for j in range(3):
-            moment_matrix[i, j] = np.sum(
-                dv * basis[i] * basis[j]
-            )
+    # Construct the 3x3 moment matrix.
+    moment_matrix = (
+        basis * dv
+    ) @ basis.T
 
     corrected = np.empty_like(f_target)
 
     for i in range(f_target.shape[0]):
+
         difference = (
             f_reference[i] - f_target[i]
         )
 
+        # Moments of the difference.
         rhs = np.array(
             [
                 np.sum(dv * difference),
-                np.sum(dv * v * difference),
-                np.sum(dv * v**2 * difference),
+                np.sum(dv * s * difference),
+                np.sum(dv * s**2 * difference),
             ],
             dtype=float,
         )
@@ -187,8 +188,8 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
 
         correction = (
             coefficients[0]
-            + coefficients[1] * v
-            + coefficients[2] * v**2
+            + coefficients[1] * s
+            + coefficients[2] * s**2
         )
 
         corrected[i] = (
