@@ -139,8 +139,12 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
     match f_reference.
 
     The correction is solved independently at every spatial location.
+
+    We use a least-squares solve rather than explicitly inverting the
+    moment matrix. This is numerically safer and avoids unnecessary
+    matrix inversion.
     """
-    correction_basis = np.vstack(
+    basis = np.column_stack(
         [
             np.ones_like(v),
             v,
@@ -148,44 +152,38 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
         ]
     )
 
-    moment_matrix = np.array(
-        [
-            [np.sum(dv * correction_basis[0] * correction_basis[0]),
-             np.sum(dv * correction_basis[0] * correction_basis[1]),
-             np.sum(dv * correction_basis[0] * correction_basis[2])],
+    weighted_basis = basis * dv
 
-            [np.sum(dv * correction_basis[1] * correction_basis[0]),
-             np.sum(dv * correction_basis[1] * correction_basis[1]),
-             np.sum(dv * correction_basis[1] * correction_basis[2])],
-
-            [np.sum(dv * correction_basis[2] * correction_basis[0]),
-             np.sum(dv * correction_basis[2] * correction_basis[1]),
-             np.sum(dv * correction_basis[2] * correction_basis[2])],
-        ],
-        dtype=float,
-    )
-
-    inverse_matrix = np.linalg.inv(moment_matrix)
+    # Moment matrix:
+    #
+    #   M_ij = integral basis_i basis_j dv
+    #
+    # np.linalg.lstsq is used below instead of np.linalg.inv().
+    moment_matrix = basis.T @ weighted_basis
 
     corrected = np.empty_like(f_target)
 
     for i in range(f_target.shape[0]):
-        target_difference = f_reference[i] - f_target[i]
+        difference = f_reference[i] - f_target[i]
 
         rhs = np.array(
             [
-                np.sum(dv * target_difference),
-                np.sum(dv * v * target_difference),
-                np.sum(dv * v**2 * target_difference),
+                np.sum(difference * dv),
+                np.sum(difference * v * dv),
+                np.sum(difference * v**2 * dv),
             ]
         )
 
-        coefficients = inverse_matrix @ rhs
+        coefficients = np.linalg.lstsq(
+            moment_matrix,
+            rhs,
+            rcond=None,
+        )[0]
 
         correction = (
-            coefficients[0] * correction_basis[0]
-            + coefficients[1] * correction_basis[1]
-            + coefficients[2] * correction_basis[2]
+            coefficients[0]
+            + coefficients[1] * v
+            + coefficients[2] * v**2
         )
 
         corrected[i] = f_target[i] + correction
