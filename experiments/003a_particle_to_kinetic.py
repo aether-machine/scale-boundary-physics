@@ -60,8 +60,8 @@ T_FINAL = 4.0
 N_X_BINS = 32
 N_V_BINS = 32
 
-V_MIN = -1.5
-V_MAX = 1.5
+V_MIN = -2.5
+V_MAX = 2.5
 
 RNG_SEED = 12345
 
