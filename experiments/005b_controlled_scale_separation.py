@@ -26,16 +26,6 @@ For each spatial mode k:
 and therefore
 
     tau = epsilon_target * L / v_ref.
-
-Three scale-separation families are tested:
-
-    epsilon = 0.01
-    epsilon = 0.05
-    epsilon = 0.10
-
-If closure is primarily controlled by epsilon, results at different
-spatial wavelengths should approximately collapse within each epsilon
-family.
 """
 
 from pathlib import Path
@@ -266,8 +256,7 @@ def hydrodynamic_moments(
 
     momentum = (
         np.sum(
-            f
-            * v[None, :],
+            f * v[None, :],
             axis=1,
         )
         * dv
@@ -283,8 +272,7 @@ def hydrodynamic_moments(
 
     energy = (
         np.sum(
-            f
-            * v[None, :] ** 2,
+            f * v[None, :] ** 2,
             axis=1,
         )
         * dv
@@ -318,6 +306,12 @@ def match_hydrodynamic_moments(
 ):
     """
     Correct candidate so density, momentum and energy match reference.
+
+    The correction has the form
+
+        a + b*v + c*v^2
+
+    at each spatial location.
     """
 
     (
@@ -365,6 +359,16 @@ def match_hydrodynamic_moments(
             + current_velocity ** 2
         )
     )
+
+    # Moment matrix for the basis:
+    #
+    #   1, v, v^2
+    #
+    # with constraints on:
+    #
+    #   integral(f)
+    #   integral(v*f)
+    #   integral(v^2*f)
 
     moment_matrix = np.array(
         [
@@ -493,6 +497,7 @@ def construct_initial_states(
         1e-12,
     )
 
+    # Repeat once after positivity clipping.
     f_b = match_hydrodynamic_moments(
         f_a,
         f_b,
@@ -711,7 +716,6 @@ def run_single_case(
     epsilon_target,
     f_a_initial,
     f_b_initial,
-    x,
     v,
     dx,
     dv,
@@ -824,9 +828,7 @@ def run_single_case(
             spatial_mode,
             tau,
         ),
-        "times": np.asarray(
-            times
-        ),
+        "times": np.asarray(times),
         "rho": np.asarray(
             rho_history
         ),
@@ -917,7 +919,6 @@ def run_experiment():
                 epsilon_target,
                 f_a,
                 f_b,
-                x,
                 v,
                 dx,
                 dv,
@@ -1109,7 +1110,7 @@ def save_outputs(results):
             )
 
     # ---------------------------------------------------------------
-    # Maximum hydro separation versus epsilon
+    # Maximum separation versus L
     # ---------------------------------------------------------------
 
     plt.figure()
@@ -1173,7 +1174,7 @@ def save_outputs(results):
     plt.close()
 
     # ---------------------------------------------------------------
-    # Final hydro separation versus epsilon
+    # Final separation versus L
     # ---------------------------------------------------------------
 
     plt.figure()
@@ -1235,7 +1236,7 @@ def save_outputs(results):
     plt.close()
 
     # ---------------------------------------------------------------
-    # Maximum hydro separation versus epsilon
+    # Maximum separation versus epsilon
     # ---------------------------------------------------------------
 
     plt.figure()
@@ -1300,7 +1301,7 @@ def save_outputs(results):
     plt.close()
 
     # ---------------------------------------------------------------
-    # Final hydro separation versus epsilon
+    # Final separation versus epsilon
     # ---------------------------------------------------------------
 
     plt.figure()
@@ -1319,7 +1320,7 @@ def save_outputs(results):
                 result["epsilon_target"]
                 for result in subset
             ]
-        ]
+        )
 
         final_values = np.array(
             [
