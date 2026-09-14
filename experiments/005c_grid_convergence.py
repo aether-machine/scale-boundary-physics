@@ -181,19 +181,25 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
             dtype=float,
         )
         
-        if i == 0:
-    print("velocity range:", np.min(v), np.max(v))
-    print("velocity shape:", v.shape)
+if i == 0:
+    print()
+    print("=== MOMENT MATRIX DIAGNOSTIC ===")
+    print("v min/max:", np.min(v), np.max(v))
+    print("v shape:", v.shape)
     print("dv:", dv)
+    print("basis shape:", basis.shape)
     print("moment matrix:")
     print(moment_matrix)
-    print("matrix rank:", np.linalg.matrix_rank(moment_matrix))
-    print("matrix condition:", np.linalg.cond(moment_matrix))
+    print("finite:", np.all(np.isfinite(moment_matrix)))
+    print("rank:", np.linalg.matrix_rank(moment_matrix))
+    print("determinant:", np.linalg.det(moment_matrix))
+    print("condition:", np.linalg.cond(moment_matrix))
+    print("===============================")
 
-        coefficients = np.linalg.solve(
-            moment_matrix,
-            rhs,
-        )
+coefficients = np.linalg.solve(
+    moment_matrix,
+    rhs,
+)
 
         correction = (
             coefficients[0]
