@@ -65,12 +65,17 @@ HIDDEN_AMPLITUDE = 0.35
 
 def maxwellian(v, density, velocity, temperature):
     """Return a one-dimensional Maxwellian."""
-    temperature = max(float(temperature), 1e-12)
+    temperature = np.maximum(
+        np.asarray(temperature),
+        1e-12,
+    )
 
     return (
         density
         / np.sqrt(2.0 * np.pi * temperature)
-        * np.exp(-0.5 * (v - velocity) ** 2 / temperature)
+        * np.exp(
+            -0.5 * (v - velocity) ** 2 / temperature
+        )
     )
 
 
