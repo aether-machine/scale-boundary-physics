@@ -131,17 +131,15 @@ def initial_distributions(nx):
     )
 
     return x, v, dx, dv, f_a, f_b
-
 def match_hydrodynamic_moments(f_reference, f_target, v, dv):
     """
     Correct f_target so that its density, momentum, and second velocity
     moment match f_reference.
 
     The velocity coordinate is scaled to [-1, 1] before constructing
-    the moment system. This greatly improves numerical conditioning.
+    the moment system. This improves numerical conditioning.
     """
 
-    # Scale velocity to approximately [-1, 1].
     velocity_scale = max(
         float(np.max(np.abs(v))),
         1.0,
@@ -149,7 +147,6 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
 
     s = v / velocity_scale
 
-    # Basis functions for the correction.
     basis = np.vstack(
         [
             np.ones_like(s),
@@ -158,7 +155,6 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
         ]
     )
 
-    # Construct the 3x3 moment matrix.
     moment_matrix = (
         basis * dv
     ) @ basis.T
@@ -171,7 +167,6 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
             f_reference[i] - f_target[i]
         )
 
-        # Moments of the difference.
         rhs = np.array(
             [
                 np.sum(dv * difference),
@@ -180,26 +175,11 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
             ],
             dtype=float,
         )
-        
-if i == 0:
-    print()
-    print("=== MOMENT MATRIX DIAGNOSTIC ===")
-    print("v min/max:", np.min(v), np.max(v))
-    print("v shape:", v.shape)
-    print("dv:", dv)
-    print("basis shape:", basis.shape)
-    print("moment matrix:")
-    print(moment_matrix)
-    print("finite:", np.all(np.isfinite(moment_matrix)))
-    print("rank:", np.linalg.matrix_rank(moment_matrix))
-    print("determinant:", np.linalg.det(moment_matrix))
-    print("condition:", np.linalg.cond(moment_matrix))
-    print("===============================")
 
-coefficients = np.linalg.solve(
-    moment_matrix,
-    rhs,
-)
+        coefficients = np.linalg.solve(
+            moment_matrix,
+            rhs,
+        )
 
         correction = (
             coefficients[0]
