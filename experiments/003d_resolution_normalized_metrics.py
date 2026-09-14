@@ -96,19 +96,21 @@ def hidden_state(
     x,
     v,
     resolution,
-    x_fraction=0.37,
-    v_fraction=0.23,
+    x_fraction=0.63,
+    v_fraction=0.73,
 ):
     """
-    Construct a second microscopic state by moving every particle
-    within its phase-space cell.
+    Construct a second microscopic state by placing each particle
+    at a different location inside the same phase-space cell.
 
-    The displacement is chosen so that the particle remains inside
-    the same histogram cell.
+    The resulting state therefore has exactly the same histogram as
+    the original state at the requested resolution.
 
-    Therefore the two states have exactly the same histogram at the
-    chosen resolution at t=0.
+    x_fraction and v_fraction specify the position inside each cell.
+    They are deliberately different from the original particle
+    positions, producing a genuinely different microscopic state.
     """
+
     x_edges = np.linspace(
         0.0,
         DOMAIN_LENGTH,
@@ -121,31 +123,48 @@ def hidden_state(
         resolution + 1,
     )
 
-    ix = np.searchsorted(x_edges, x, side="right") - 1
-    iv = np.searchsorted(v_edges, v, side="right") - 1
+    ix = np.searchsorted(
+        x_edges,
+        x,
+        side="right",
+    ) - 1
 
-    ix = np.clip(ix, 0, resolution - 1)
-    iv = np.clip(iv, 0, resolution - 1)
+    iv = np.searchsorted(
+        v_edges,
+        v,
+        side="right",
+    ) - 1
+
+    ix = np.clip(
+        ix,
+        0,
+        resolution - 1,
+    )
+
+    iv = np.clip(
+        iv,
+        0,
+        resolution - 1,
+    )
 
     dx = x_edges[1] - x_edges[0]
     dv = v_edges[1] - v_edges[0]
 
+    # Construct a new position inside the same x cell.
     x_new = (
-        x
+        x_edges[ix]
         + x_fraction * dx
-    ) % DOMAIN_LENGTH
-
-    v_new = v + v_fraction * dv
-
-    # Keep velocity inside the histogram range.
-    v_new = np.clip(
-        v_new,
-        V_MIN + 1e-12,
-        V_MAX - 1e-12,
     )
 
-    # The construction above normally stays inside the original cell.
-    # The checks below make that assumption explicit.
+    # Construct a new velocity inside the same v cell.
+    v_new = (
+        v_edges[iv]
+        + v_fraction * dv
+    )
+
+    # Explicitly verify that every particle remains in its original
+    # phase-space cell.
+
     ix_new = np.searchsorted(
         x_edges,
         x_new,
@@ -158,17 +177,28 @@ def hidden_state(
         side="right",
     ) - 1
 
-    ix_new = np.clip(ix_new, 0, resolution - 1)
-    iv_new = np.clip(iv_new, 0, resolution - 1)
+    ix_new = np.clip(
+        ix_new,
+        0,
+        resolution - 1,
+    )
+
+    iv_new = np.clip(
+        iv_new,
+        0,
+        resolution - 1,
+    )
 
     if not np.array_equal(ix, ix_new):
         raise RuntimeError(
-            "Hidden x displacement crossed a histogram cell."
+            "Hidden x construction failed: "
+            "particle changed histogram cell."
         )
 
     if not np.array_equal(iv, iv_new):
         raise RuntimeError(
-            "Hidden v displacement crossed a histogram cell."
+            "Hidden v construction failed: "
+            "particle changed histogram cell."
         )
 
     return x_new, v_new
