@@ -132,7 +132,6 @@ def initial_distributions(nx):
 
     return x, v, dx, dv, f_a, f_b
 
-
 def match_hydrodynamic_moments(f_reference, f_target, v, dv):
     """
     Correct f_target by a + b*v + c*v^2 so its first three moments
@@ -140,11 +139,11 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
 
     The correction is solved independently at every spatial location.
 
-    We use a least-squares solve rather than explicitly inverting the
-    moment matrix. This is numerically safer and avoids unnecessary
-    matrix inversion.
+    The moment system is constructed from the velocity grid using
+    np.linalg.solve rather than explicitly computing a matrix inverse.
     """
-    basis = np.column_stack(
+
+    basis = np.vstack(
         [
             np.ones_like(v),
             v,
@@ -152,33 +151,39 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
         ]
     )
 
-    weighted_basis = basis * dv
-
     # Moment matrix:
     #
-    #   M_ij = integral basis_i basis_j dv
+    # M_ij = integral basis_i * basis_j dv
     #
-    # np.linalg.lstsq is used below instead of np.linalg.inv().
-    moment_matrix = basis.T @ weighted_basis
+    # Construct it directly from the velocity grid.
+    moment_matrix = np.empty((3, 3), dtype=float)
+
+    for i in range(3):
+        for j in range(3):
+            moment_matrix[i, j] = np.sum(
+                dv * basis[i] * basis[j]
+            )
 
     corrected = np.empty_like(f_target)
 
     for i in range(f_target.shape[0]):
-        difference = f_reference[i] - f_target[i]
+        difference = (
+            f_reference[i] - f_target[i]
+        )
 
         rhs = np.array(
             [
-                np.sum(difference * dv),
-                np.sum(difference * v * dv),
-                np.sum(difference * v**2 * dv),
-            ]
+                np.sum(dv * difference),
+                np.sum(dv * v * difference),
+                np.sum(dv * v**2 * difference),
+            ],
+            dtype=float,
         )
 
-        coefficients = np.linalg.lstsq(
+        coefficients = np.linalg.solve(
             moment_matrix,
             rhs,
-            rcond=None,
-        )[0]
+        )
 
         correction = (
             coefficients[0]
@@ -186,10 +191,11 @@ def match_hydrodynamic_moments(f_reference, f_target, v, dv):
             + coefficients[2] * v**2
         )
 
-        corrected[i] = f_target[i] + correction
+        corrected[i] = (
+            f_target[i] + correction
+        )
 
     return corrected
-
 
 # ---------------------------------------------------------------------
 # Hydrodynamic moments
