@@ -62,6 +62,7 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 
 # ---------------------------------------------------------------------------
@@ -172,7 +173,7 @@ def gaussian_moments(mean, variance, maximum_order=10):
                 )
 
             total += (
-                np.math.comb(n, k)
+                math.comb(n, k)
                 * mean ** (n - k)
                 * variance ** (k / 2.0)
                 * gaussian_moment
@@ -267,54 +268,64 @@ def gaussian_closure_rk4_step(mean, variance, dt):
 
 def make_initial_ensembles(n, seed=606):
     """
-    Construct two ensembles with identical mean and variance but different
-    higher-order structure.
+    Construct two ensembles with exactly the same first two moments
+    but deliberately different higher-order structure.
 
     Ensemble A:
-        approximately Gaussian.
+        Gaussian-like distribution.
 
     Ensemble B:
-        symmetric three-point-like mixture.
+        symmetric three-component mixture with the same mean and variance.
 
-    Both are normalized to have exactly the same first two moments.
+    The distributions are then independently affine-normalized so that
+    they have exactly the same mean and variance.
     """
 
     rng = np.random.default_rng(seed)
 
-    # ------------------------------------------------------------------
+    target_mean = 1.0
+    target_std = 0.25
+
+    # ---------------------------------------------------------------
     # Ensemble A: Gaussian
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------------
 
     A = rng.normal(
-        loc=1.0,
-        scale=0.25,
+        loc=target_mean,
+        scale=target_std,
         size=n,
     )
 
-    # ------------------------------------------------------------------
-    # Ensemble B:
+    # ---------------------------------------------------------------
+    # Ensemble B: deliberately non-Gaussian mixture
     #
-    # A mixture with a small population farther from the mean.
-    # The mixture is then affine-normalized so that mean and variance
-    # exactly match A.
-    # ------------------------------------------------------------------
+    # Most particles remain near the mean, while a smaller population
+    # occupies two symmetric tails.
+    # ---------------------------------------------------------------
 
-    choices = rng.choice(
-        [-1.0, 0.0, 1.0],
+    components = rng.choice(
+        [-1, 0, 1],
         size=n,
-        p=[0.15, 0.70, 0.15],
+        p=[0.10, 0.80, 0.10],
     )
 
-    B = 1.0 + 0.5 * choices
+    B = target_mean + 0.65 * components
 
-    # Match first two moments of A exactly.
-    target_mean = np.mean(A)
-    target_std = np.std(A)
+    # ---------------------------------------------------------------
+    # Force B to have exactly the same first two moments as A.
+    # ---------------------------------------------------------------
 
-    B_mean = np.mean(B)
-    B_std = np.std(B)
+    A = target_mean + (
+        A - np.mean(A)
+    ) * (
+        target_std / np.std(A)
+    )
 
-    B = target_mean + (B - B_mean) * (target_std / B_std)
+    B = target_mean + (
+        B - np.mean(B)
+    ) * (
+        target_std / np.std(B)
+    )
 
     return A, B
 
