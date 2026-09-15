@@ -459,29 +459,29 @@ Therefore, non-closure alone is not sufficient to explain pathological effective
 
 A second bounded system was constructed with stabilising nonlinear dynamics:
 
-\[
+$$\[
 \dot{x}=y,
-\]
+\]$$
 
-\[
+$$\[
 \epsilon\dot{y}=x+x^3-x^5-y.
-\]
+\]$$
 
-The \(-x^5\) term provides strong stabilisation at large amplitude.
+The $$\(-x^5\)$$ term provides strong stabilisation at large amplitude.
 
-Closures trained only over \(|x|\le1\) were then extrapolated from an initial condition outside the training region.
+Closures trained only over $$\(|x|\le1\)$$ were then extrapolated from an initial condition outside the training region.
 
 Low-order closures could become catastrophically unstable.
 
 For example, with \(\epsilon=0.05\), a degree-1 closure reached a magnitude of approximately:
 
-\[
+$$\[
 |x|\sim10^6.
-\]
+\]$$
 
 The underlying system remained bounded.
 
-Higher-order closures performed substantially better; the degree-5 closure remained bounded with prediction RMS error approximately \(0.065\).
+Higher-order closures performed substantially better; the degree-5 closure remained bounded with prediction RMS error approximately $$\(0.065\)$$.
 
 ### Interpretation
 
