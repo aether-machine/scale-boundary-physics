@@ -416,7 +416,41 @@ The experiment therefore supports the possibility of scale-dependent corrections
 
 ---
 
-## 9. 006b–006c: Projection and pathological closures
+# 9. Effective Closure, Hidden State, and Memory
+
+The 006 series asks a more specific question than the earlier scale-transition experiments:
+
+> What happens when a dynamical system is represented using variables that do not contain enough information to determine their own future evolution?
+
+The central distinction is between **information loss** and **dynamical closure**.
+
+Coarse-graining necessarily removes information. That alone is not a problem. An effective description can remain perfectly valid if the retained variables contain enough information to predict their own evolution.
+
+The potential problem arises when the retained variables are insufficient to determine the future state.
+
+Schematically, let $$\(X\)$$ denote the full microscopic state and $$\(H=C[X]\)$$ a reduced or coarse-grained state. The full system evolves according to some map $$\(\Phi_t^{\mathrm{micro}}\)$$, while the effective model uses $$\(\Phi_t^{\mathrm{eff}}\)$$.
+
+The central diagnostic is whether coarse-graining and evolution approximately commute:
+
+$$\(\boxed{\Delta_t = C\left[\Phi_{\mathrm{micro}}(t)X_0\right] - \Phi_{\mathrm{eff}}(t)C[X_0]}\)$$
+
+If $$\(\Delta_t\)$$ becomes significant, the effective representation is failing to reproduce the dynamics of the underlying system.
+
+The experiments below progressively distinguish several possible causes of this failure:
+
+1. instantaneous coarse variables may not be dynamically closed;
+2. low-order closures can omit stabilising information;
+3. higher moments can sometimes restore part of that information;
+4. temporal history can also restore predictive information;
+5. history need not identify the hidden microscopic state itself;
+6. conditional closure uncertainty can quantify the remaining ambiguity;
+7. matched-complexity controls can test whether the apparent benefit of history is simply a consequence of giving the model more parameters.
+
+The purpose of the series is not to demonstrate that memory is the unique mechanism of effective closure.
+
+It is to determine whether **finite history contains predictive information that is not efficiently represented by the tested instantaneous variables**.
+
+---
 
 ### 9.1 Experiment 006b — Projection-induced non-closure
 
@@ -980,41 +1014,6 @@ If the uncertainty approaches a stable plateau, that would provide evidence for 
 If it continues decreasing over increasingly long histories, the appropriate reduced description may require a longer-memory representation.
 
 Either outcome would help determine what additional structure is required to make the coarse dynamics approximately closed.
-
----
-# 15. Effective Closure, Hidden State, and Memory
-
-The 006 series asks a more specific question than the earlier scale-transition experiments:
-
-> What happens when a dynamical system is represented using variables that do not contain enough information to determine their own future evolution?
-
-The central distinction is between **information loss** and **dynamical closure**.
-
-Coarse-graining necessarily removes information. That alone is not a problem. An effective description can remain perfectly valid if the retained variables contain enough information to predict their own evolution.
-
-The potential problem arises when the retained variables are insufficient to determine the future state.
-
-Schematically, let $$\(X\)$$ denote the full microscopic state and $$\(H=C[X]\)$$ a reduced or coarse-grained state. The full system evolves according to some map $$\(\Phi_t^{\mathrm{micro}}\)$$, while the effective model uses $$\(\Phi_t^{\mathrm{eff}}\)$$.
-
-The central diagnostic is whether coarse-graining and evolution approximately commute:
-
-$$\(\boxed{\Delta_t = C\left[\Phi_{\mathrm{micro}}(t)X_0\right] - \Phi_{\mathrm{eff}}(t)C[X_0]}\)$$
-
-If $$\(\Delta_t\)$$ becomes significant, the effective representation is failing to reproduce the dynamics of the underlying system.
-
-The experiments below progressively distinguish several possible causes of this failure:
-
-1. instantaneous coarse variables may not be dynamically closed;
-2. low-order closures can omit stabilising information;
-3. higher moments can sometimes restore part of that information;
-4. temporal history can also restore predictive information;
-5. history need not identify the hidden microscopic state itself;
-6. conditional closure uncertainty can quantify the remaining ambiguity;
-7. matched-complexity controls can test whether the apparent benefit of history is simply a consequence of giving the model more parameters.
-
-The purpose of the series is not to demonstrate that memory is the unique mechanism of effective closure.
-
-It is to determine whether **finite history contains predictive information that is not efficiently represented by the tested instantaneous variables**.
 
 ---
 
