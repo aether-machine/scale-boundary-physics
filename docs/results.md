@@ -844,78 +844,39 @@ It may only need to retain the information relevant to predicting the future evo
 
 ## 14. 006k — Conditional closure uncertainty
 
-Experiment 006k is intended to test the next step directly.
-
-The quantity of interest is the conditional variance of the coarse derivative:
-
-\[
-\mathcal U_0
-=
-\operatorname{Var}(\dot H\mid H),
-\]
-
-compared with a history-conditioned quantity:
-
-\[
-\mathcal U_k
-=
-\operatorname{Var}
-\left(
-\dot H
-\mid
-H_t,H_{t-1},\ldots,H_{t-k}
-\right).
-\]
-
-The question is whether adding coarse history reduces the irreducible uncertainty in the instantaneous coarse derivative.
-
-If:
-
-\[
-\mathcal U_k<\mathcal U_0,
-\]
-
-then history provides information that improves dynamical closure.
-
-The size and statistical significance of this reduction are more informative than prediction error alone because they directly probe the degree of conditional non-closure.
-
-The nearest-neighbour conditional-variance estimator used in this experiment becomes increasingly noisy as history dimension grows. Results must therefore be interpreted cautiously and accompanied by uncertainty estimates.
-
-### 006k — Conditional closure uncertainty
-
 Experiment 006k asked whether the dynamical uncertainty of the retained variables could be reduced by conditioning on their recent history.
 
 The retained variables were:
 
-\[
+$$\[
 H=(m_1,m_2),
-\]
+\]$$
 
 where
 
-\[
+$$\[
 m_1=E[x],
 \qquad
 m_2=E[x^2].
-\]
+\]$$
 
 The microscopic dynamics were:
 
-\[
+$$\[
 \dot{x}=x+x^3-x^5.
-\]
+\]$$
 
 The quantity of interest was the conditional variance of the microscopic coarse derivative:
 
-\[
+$$\[
 \mathcal U_0
 =
 \operatorname{Var}(\dot H\mid H),
-\]
+\]$$
 
 and, for increasingly long histories,
 
-\[
+$$\[
 \mathcal U_k
 =
 \operatorname{Var}
@@ -924,7 +885,7 @@ and, for increasingly long histories,
 \mid
 H_t,H_{t-1},\ldots,H_{t-k}
 \right).
-\]
+\]$$
 
 The motivation was straightforward.
 
