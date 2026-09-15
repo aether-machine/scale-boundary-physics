@@ -995,8 +995,747 @@ If it continues decreasing over increasingly long histories, the appropriate red
 Either outcome would help determine what additional structure is required to make the coarse dynamics approximately closed.
 
 ---
+# 15. Effective Closure, Hidden State, and Memory
 
-# 15. Cross-experiment synthesis
+The 006 series asks a more specific question than the earlier scale-transition experiments:
+
+> What happens when a dynamical system is represented using variables that do not contain enough information to determine their own future evolution?
+
+The central distinction is between **information loss** and **dynamical closure**.
+
+Coarse-graining necessarily removes information. That alone is not a problem. An effective description can remain perfectly valid if the retained variables contain enough information to predict their own evolution.
+
+The potential problem arises when the retained variables are insufficient to determine the future state.
+
+Schematically, let $$\(X\)$$ denote the full microscopic state and $$\(H=C[X]\)$$ a reduced or coarse-grained state. The full system evolves according to some map $$\(\Phi_t^{\mathrm{micro}}\)$$, while the effective model uses $$\(\Phi_t^{\mathrm{eff}}\)$$.
+
+The central diagnostic is whether coarse-graining and evolution approximately commute:
+
+$$\(\boxed{\Delta_t = C\left[\Phi_{\mathrm{micro}}(t)X_0\right] - \Phi_{\mathrm{eff}}(t)C[X_0]}\)$$
+
+If $$\(\Delta_t\)$$ becomes significant, the effective representation is failing to reproduce the dynamics of the underlying system.
+
+The experiments below progressively distinguish several possible causes of this failure:
+
+1. instantaneous coarse variables may not be dynamically closed;
+2. low-order closures can omit stabilising information;
+3. higher moments can sometimes restore part of that information;
+4. temporal history can also restore predictive information;
+5. history need not identify the hidden microscopic state itself;
+6. conditional closure uncertainty can quantify the remaining ambiguity;
+7. matched-complexity controls can test whether the apparent benefit of history is simply a consequence of giving the model more parameters.
+
+The purpose of the series is not to demonstrate that memory is the unique mechanism of effective closure.
+
+It is to determine whether **finite history contains predictive information that is not efficiently represented by the tested instantaneous variables**.
+
+---
+
+## 15.1 Intrinsic Non-Closure
+
+### 006g — Intrinsic Non-Closure
+
+The first question was whether two microscopic ensembles could have the same retained state while having different future dynamics.
+
+The microscopic system was
+
+$$\(\dot{x}=x+x^3-x^5\)$$.
+
+The retained variables were the first two moments,
+
+$$\(H=(m_1,m_2)\)$$,
+
+where $$\(m_n=\mathbb{E}[x^n]\)$$.
+
+Two different microscopic ensembles were constructed so that they initially had the same \(m_1\) and \(m_2\), while differing in their higher-order structure.
+
+The initial retained states agreed to numerical precision:
+
+- initial \(m_1\) difference: approximately \(2.2\times10^{-16}\);
+- initial \(m_2\) difference: \(0\);
+- initial retained-state separation: \(0\).
+
+Despite this, the subsequent retained dynamics diverged.
+
+The maximum retained-state separation was approximately
+
+\(5.53\times10^{-3}\),
+
+while the maximum difference between the corresponding microscopic derivative information was approximately
+
+\(5.70\times10^{-2}\).
+
+The maximum difference in the hidden microscopic state was approximately
+
+\(2.96\times10^{-2}\).
+
+Both microscopic systems remained bounded.
+
+### Interpretation
+
+This provides a direct toy-model demonstration of **intrinsic non-closure**.
+
+The same instantaneous retained state can correspond to different microscopic states and therefore different future derivatives.
+
+Consequently, there is no exact autonomous first-order evolution law of the form
+
+\(\dot{H}=F(H)\)
+
+for \(H=(m_1,m_2)\) alone in this system.
+
+This is stronger than merely observing prediction error in a fitted model. It demonstrates a structural ambiguity in the reduced variables themselves.
+
+The important point is that non-closure did **not** produce a singularity.
+
+The underlying dynamics remained regular.
+
+Therefore:
+
+> Non-closure is a possible source of effective-model failure, but non-closure by itself does not imply pathological or singular dynamics.
+
+---
+
+## 15.2 Memory as Additional Predictive Information
+
+### 006h — Hand-Chosen Memory Closure
+
+The next experiment tested whether adding a simple memory variable could improve an instantaneous closure.
+
+A memory-augmented effective model was constructed using the retained state together with a hand-chosen relaxation variable.
+
+The maximum instantaneous closure error was approximately
+
+\(1.54\times10^{-2}\).
+
+The maximum error of the memory-augmented closure was approximately
+
+\(1.64\times10^{-2}\).
+
+The maximum error reduction was therefore negative, approximately
+
+\(-9.9\times10^{-4}\),
+
+corresponding to a roughly \(6.4\%\) deterioration at the maximum error point.
+
+### Interpretation
+
+This experiment is important primarily as a negative result.
+
+A memory term does not automatically improve an effective description.
+
+The memory equation used here was hand-chosen rather than derived from the microscopic dynamics. The result therefore does not test whether memory is fundamentally useful; it tests one particular memory ansatz.
+
+The negative result prevents an overly simple conclusion:
+
+> Adding a memory variable is not, by itself, sufficient to restore closure.
+
+A more general data-driven approach was therefore used next.
+
+---
+
+### 006i — Data-Driven Memory Closure
+
+The next experiment compared an instantaneous model,
+
+\(\dot{H}=F(H_t)\),
+
+with models given access to a finite history,
+
+\(\dot{H}=A_0H_t+A_1H_{t-\tau}+\cdots+A_kH_{t-k\tau}\).
+
+The models were trained on independent trajectories and evaluated out of sample.
+
+The instantaneous model achieved a test RMS error of approximately
+
+\(6.2764\times10^{-2}\).
+
+The best finite-history model achieved approximately
+
+\(5.5974\times10^{-2}\).
+
+This corresponds to an improvement of approximately \(10.8\%\).
+
+The best result occurred at the largest history length tested, \(k=16\).
+
+### Interpretation
+
+Unlike the hand-chosen memory experiment, the data-driven experiment found that temporal history improved prediction.
+
+The result indicates that:
+
+> The recent history of the coarse variables contains predictive information about their future evolution that is not fully captured by the instantaneous retained state.
+
+This does not establish that the underlying physical dynamics are fundamentally non-Markovian.
+
+A finite history can act as a proxy for many kinds of unresolved information, including:
+
+- hidden microscopic variables;
+- higher moments;
+- unresolved correlations;
+- phase information;
+- latent state variables;
+- slowly relaxing degrees of freedom.
+
+The result therefore establishes a predictive fact rather than an ontological interpretation.
+
+---
+
+## 15.3 Does History Recover the Hidden State?
+
+### 006j — Hidden-State Reconstruction
+
+A natural follow-up question was whether the predictive value of history came from reconstructing which hidden microscopic state the system was actually in.
+
+Two matched microscopic ensembles were constructed with the same initial retained state but different hidden structure.
+
+A classifier was then given increasingly long histories of the retained variables and asked to distinguish the two hidden-state classes.
+
+The classifier remained close to chance.
+
+Representative results were:
+
+| History length | Ordered accuracy | Shuffled accuracy |
+|---:|---:|---:|
+| 0 | 0.5038 | 0.5039 |
+| 1 | 0.5020 | 0.5017 |
+| 2 | 0.5011 | 0.5011 |
+| 4 | 0.5005 | 0.5275 |
+| 8 | 0.4983 | 0.4983 |
+| 16 | 0.4985 | 0.4992 |
+
+The best ordered-history accuracy was only approximately \(0.504\).
+
+### Interpretation
+
+There was no evidence that the tested history reconstructed the hidden-state identity.
+
+This is not inconsistent with 006i.
+
+The two experiments ask different questions.
+
+006i asks:
+
+> Does history improve prediction of the future derivative?
+
+006j asks:
+
+> Does history reveal which of two particular hidden microscopic ensembles generated the observation?
+
+A representation can improve prediction without uniquely identifying the underlying microscopic state.
+
+This distinction is important.
+
+Effective closure does not necessarily require reconstructing the complete hidden state. It may only require recovering enough information to predict the future evolution of the retained variables.
+
+---
+
+## 15.4 Conditional Closure Uncertainty
+
+### 006k — Conditional Closure Uncertainty
+
+A more direct measure of closure was introduced by examining the variation in the coarse derivative that remains after conditioning on the information available to the effective model.
+
+For instantaneous closure, define
+
+\(\mathcal{U}_0=\operatorname{Var}\left(\dot{H}\mid H\right)\).
+
+For a history of length \(k\), define
+
+\(\mathcal{U}_k=\operatorname{Var}\left(\dot{H}\mid H_t,H_{t-1},\ldots,H_{t-k}\right)\).
+
+The measured uncertainty decreased systematically as history was added:
+
+| History length | Conditional uncertainty | Bootstrap standard deviation | Fractional reduction |
+|---:|---:|---:|---:|
+| 0 | 0.13773 | 0.00272 | 0.0% |
+| 1 | 0.12319 | 0.00341 | 10.6% |
+| 2 | 0.11609 | 0.00371 | 15.7% |
+| 4 | 0.09811 | 0.00265 | 28.8% |
+| 8 | 0.07900 | 0.00137 | 42.6% |
+| 16 | 0.05683 | 0.00161 | 58.7% |
+
+At history length 16, the estimated unexplained variance was reduced by approximately \(58.7\%\) relative to instantaneous conditioning.
+
+### Interpretation
+
+This provides a more direct measure of the closure problem than prediction error alone.
+
+The instantaneous retained state leaves substantial ambiguity in the future derivative.
+
+Adding temporal information progressively reduces that ambiguity.
+
+The result is consistent with the hypothesis that the coarse state is not dynamically sufficient on its own and that some of the missing predictive information is recoverable from recent history.
+
+The result should nevertheless be interpreted cautiously.
+
+Conditional-variance estimation becomes more difficult as the dimension of the conditioning space increases. Nearest-neighbour estimates can suffer from finite-sample effects and high-dimensional sparsity.
+
+The bootstrap measures variability of the estimator under resampling; it does not remove all possible estimator bias.
+
+The experiment therefore demonstrates a robust trend rather than identifying a unique physical memory kernel.
+
+---
+
+# 15.5 What Kind of Information Restores Closure?
+
+The previous experiments established that history can contain predictive information.
+
+The next question was more demanding:
+
+> Is temporal history actually providing something that instantaneous higher moments cannot provide?
+
+This matters because the apparent role of memory could simply reflect the fact that the retained variables \(m_1,m_2\) were too limited.
+
+If adding sufficiently many instantaneous moments produced the same predictive improvement, there would be less reason to describe the effect specifically in terms of memory.
+
+Two experiments addressed this.
+
+---
+
+## 15.5.1 Higher-Moment Closure
+
+### 006l — Minimal Sufficient Closure
+
+The first comparison expanded the instantaneous state using higher moments and compared this with adding history.
+
+The models included:
+
+- \(m_1,m_2\);
+- \(m_1,m_2\) plus 4 history points;
+- \(m_1,m_2\) plus 16 history points;
+- \(m_1,m_2,m_3\);
+- \(m_1,\ldots,m_4\);
+- \(m_1,\ldots,m_5\);
+- \(m_1,m_2,m_3\) plus 4 history points.
+
+The results were:
+
+| Representation | Features | Test RMS | \(R^2\) |
+|---|---:|---:|---:|
+| \(m_1,m_2\) | 2 | 0.055245 | 0.901950 |
+| \(m_1,m_2\) + history 4 | 10 | 0.051682 | 0.909350 |
+| \(m_1,m_2\) + history 16 | 34 | 0.040528 | 0.923867 |
+| \(m_1,m_2,m_3\) | 3 | 0.054673 | 0.903968 |
+| \(m_1,\ldots,m_4\) | 4 | 0.054654 | 0.904035 |
+| \(m_1,\ldots,m_5\) | 5 | 0.054654 | 0.904036 |
+| \(m_1,m_2,m_3\) + history 4 | 15 | 0.051682 | 0.909350 |
+
+The instantaneous higher-moment representations produced only small improvements over the \(m_1,m_2\) baseline.
+
+By contrast, adding history produced progressively larger improvements.
+
+For example, the 16-history representation reduced RMS error by approximately \(26.6\%\) relative to the instantaneous \(m_1,m_2\) baseline.
+
+### Interpretation
+
+Within the tested model class, adding higher moments through \(m_5\) produced relatively little additional predictive information, whereas adding temporal history produced substantially more.
+
+However, this comparison was not yet complexity-matched.
+
+A history model with many lagged variables contains more regression parameters than a model containing only a few instantaneous moments.
+
+The result therefore motivates a stricter control.
+
+---
+
+## 15.5.2 Matched-Complexity Closure
+
+### 006m — Matched-Complexity Closure
+
+The next experiment compared moment-based and history-based closures using the same regression framework while approximately matching model complexity.
+
+The comparisons included:
+
+- \(m_1,m_2\) versus \(m_1,m_2\) plus one history point;
+- \(m_1,\ldots,m_6\) versus \(m_1,m_2\) plus two history points;
+- \(m_1,\ldots,m_8\) versus \(m_1,m_2\) plus three history points;
+- and longer matched representations.
+
+The initial results were:
+
+| Representation | Features | Parameters | RMS |
+|---|---:|---:|---:|
+| \(m_1,m_2\) | 2 | 4 | 0.055084 |
+| \(m_1,\ldots,m_6\) | 6 | 12 | 0.054491 |
+| \(m_1,\ldots,m_8\) | 8 | 16 | 0.054491 |
+| \(m_1,m_2\) + history 1 | 4 | 8 | 0.053818 |
+| \(m_1,m_2\) + history 2 | 6 | 12 | 0.053096 |
+| \(m_1,m_2\) + history 4 | 10 | 20 | 0.051529 |
+| \(m_1,m_2\) + history 8 | 18 | 36 | 0.048054 |
+
+The result suggested that history continued to improve prediction even after adding several instantaneous moments.
+
+However, because this first version used a single train/test split, a multi-split equal-budget experiment was performed.
+
+---
+
+# 15.6 Equal-Budget Memory vs Moment Closure
+
+### 006n — Equal-Budget Memory vs Moment Closure
+
+This experiment was designed as the strongest control in the 006 series.
+
+Moment-based and history-based representations were given equal numbers of regression parameters.
+
+The experiment used:
+
+- 8 independent train/test splits;
+- 1000 independent trajectories per split;
+- 700 training trajectories;
+- 300 test trajectories;
+- 512 particles per ensemble;
+- \(dt=0.01\);
+- total simulation time \(T=8\);
+- the same ridge-regression framework for every representation.
+
+The matched representations were:
+
+| Parameter budget | Moment representation | History representation |
+|---:|---|---|
+| 8 | \(m_1,\ldots,m_4\) | \(m_1,m_2\) + history 1 |
+| 12 | \(m_1,\ldots,m_6\) | \(m_1,m_2\) + history 2 |
+| 16 | \(m_1,\ldots,m_8\) | \(m_1,m_2\) + history 3 |
+| 20 | \(m_1,\ldots,m_{10}\) | \(m_1,m_2\) + history 4 |
+| 28 | \(m_1,\ldots,m_{14}\) | \(m_1,m_2\) + history 6 |
+| 36 | \(m_1,\ldots,m_{18}\) | \(m_1,m_2\) + history 8 |
+
+The aggregate results were:
+
+| Representation | Budget | Mean RMS | Std. RMS | Mean \(R^2\) |
+|---|---:|---:|---:|---:|
+| \(m_1,\ldots,m_4\) | 8 | 0.054610 | 0.000033 | 0.903976 |
+| \(m_1,m_2\) + history 1 | 8 | 0.053934 | 0.000032 | 0.905296 |
+| \(m_1,\ldots,m_6\) | 12 | 0.054609 | 0.000033 | 0.903977 |
+| \(m_1,m_2\) + history 2 | 12 | 0.053208 | 0.000032 | 0.906624 |
+| \(m_1,\ldots,m_8\) | 16 | 0.054609 | 0.000033 | 0.903977 |
+| \(m_1,m_2\) + history 3 | 16 | 0.052440 | 0.000031 | 0.907950 |
+| \(m_1,\ldots,m_{10}\) | 20 | 0.054609 | 0.000033 | 0.903977 |
+| \(m_1,m_2\) + history 4 | 20 | 0.051636 | — | 0.909268 |
+| \(m_1,\ldots,m_{14}\) | 28 | 0.054609 | 0.000033 | 0.903977 |
+| \(m_1,m_2\) + history 6 | 28 | 0.049939 | 0.000029 | 0.911863 |
+| \(m_1,\ldots,m_{18}\) | 36 | 0.054609 | 0.000033 | 0.903977 |
+| \(m_1,m_2\) + history 8 | 36 | 0.048149 | 0.000028 | 0.914389 |
+
+The matched-pair comparisons showed the following reductions in RMS error for the history representation:
+
+| Budget | Mean RMS difference | Fractional history advantage |
+|---:|---:|---:|
+| 8 | 0.000676 | 1.24% |
+| 12 | 0.001401 | 2.57% |
+| 16 | 0.002169 | 3.97% |
+| 20 | 0.002973 | 5.45% |
+| 28 | 0.004670 | 8.55% |
+| 36 | 0.006460 | 11.83% |
+
+The history representation had lower RMS error on all eight train/test splits at every tested parameter budget.
+
+### Interpretation
+
+This is the strongest result of the 006 series.
+
+At matched regression capacity, finite temporal history consistently improved prediction relative to the tested instantaneous moment representations.
+
+The effect was not confined to a single train/test split.
+
+The most directly interpretable comparison is the 12-parameter case:
+
+- instantaneous \(m_1,\ldots,m_6\): mean RMS \(\approx0.05461\);
+- \(m_1,m_2\) plus two history points: mean RMS \(\approx0.05321\).
+
+The relative reduction in RMS error was approximately \(2.6\%\).
+
+At the largest tested budget, 36 parameters, the corresponding reduction was approximately \(11.8\%\).
+
+The moment-only models were also notable for their lack of improvement.
+
+From \(m_1,\ldots,m_4\) through \(m_1,\ldots,m_{18}\), the mean RMS remained approximately \(0.05461\).
+
+By contrast, the history models improved monotonically over the tested range.
+
+This suggests that the predictive information contained in recent history is not efficiently represented by simply adding the tested instantaneous moments.
+
+---
+
+# 15.7 What the 006 Series Establishes
+
+Taken together, experiments 006g–006n provide a coherent progression.
+
+### 1. Instantaneous coarse variables can be intrinsically non-closed
+
+006g showed that two microscopic ensembles can have identical retained variables but different future derivatives.
+
+Therefore an exact autonomous equation
+
+\(\dot{H}=F(H)\)
+
+need not exist for a chosen coarse representation.
+
+### 2. Memory is not automatically beneficial
+
+006h produced a negative result for a hand-designed memory ansatz.
+
+This prevents the conclusion that any memory term will restore closure.
+
+### 3. Data-driven history can improve prediction
+
+006i showed that finite history reduced out-of-sample prediction error relative to instantaneous closure.
+
+### 4. Predictive memory does not necessarily identify hidden microscopic state
+
+006j found no evidence that the tested history reconstructed the identity of the hidden ensemble.
+
+Thus predictive sufficiency and hidden-state identification are distinct problems.
+
+### 5. History reduces conditional closure uncertainty
+
+006k showed a systematic reduction in conditional derivative uncertainty, reaching approximately \(58.7\%\) reduction at the longest tested history.
+
+### 6. Adding low-order instantaneous moments produced only modest improvement
+
+006l found little additional predictive value from extending the instantaneous representation through \(m_5\).
+
+### 7. The history result survives a complexity control
+
+006m and especially 006n showed that the predictive benefit of history persists when moment-based and history-based models are given matched regression capacity.
+
+---
+
+# 15.8 The Current Interpretation
+
+The experiments support the following working interpretation:
+
+> **A coarse-grained dynamical description can fail to be Markovian in its instantaneous variables because unresolved information continues to influence its future evolution. Some of that information can be represented either by additional state variables or, approximately, by finite temporal history.**
+
+This is a statement about the structure of the effective description.
+
+It is not a claim that memory is necessarily fundamental.
+
+History can encode information about hidden variables without revealing those variables explicitly.
+
+A useful conceptual picture is therefore:
+
+\(\text{microscopic state}\rightarrow\text{coarse state}\)
+
+followed, when closure is incomplete, by
+
+\(\text{coarse state}+\text{history}\rightarrow\text{improved effective prediction}\).
+
+An alternative is to enlarge the instantaneous state:
+
+\(\text{coarse state}+\text{additional variables}\rightarrow\text{improved closure}\).
+
+The two approaches are not fundamentally different in principle. A sufficiently rich set of additional state variables can convert a history-dependent process into a higher-dimensional Markovian one.
+
+The experiments therefore do not establish that time-history is ontologically fundamental.
+
+They establish that **temporal context is a useful carrier of unresolved predictive information in this model**.
+
+---
+
+# 15.9 Relationship to the Scale-Boundary Hypothesis
+
+The 006 experiments are deliberately more abstract than the earlier fluid and kinetic experiments.
+
+They do not simulate the Navier–Stokes singularity.
+
+They instead isolate a mechanism that could, in principle, become relevant when moving between physical descriptions.
+
+The proposed chain is:
+
+\(\text{microscopic dynamics}\rightarrow\text{coarse-graining}\rightarrow\text{loss of information}\rightarrow\text{loss of closure}\rightarrow\text{effective correction required}\).
+
+That correction need not be a single “memory term”.
+
+Depending on the underlying system, the missing structure could take the form of:
+
+- additional moments;
+- hidden variables;
+- correlations;
+- nonlocal interactions;
+- stochastic terms;
+- memory kernels;
+- or combinations of these.
+
+The experiments therefore support a more general hypothesis than “memory fixes singularities”.
+
+The broader hypothesis is:
+
+> **When an effective description ceases to contain enough information to remain dynamically closed, additional structure may become necessary.**
+
+Memory is one possible representation of that additional structure.
+
+---
+
+# 15.10 Important Negative Result: No Singularity Was Produced
+
+None of the 006 experiments demonstrates a finite-time singularity in the underlying dynamics.
+
+This distinction is essential.
+
+Several experiments produced runaway behaviour in deliberately truncated or badly extrapolated effective models.
+
+For example, 006c showed that a low-order closure can become catastrophically unstable even when the underlying system remains bounded.
+
+006e similarly showed that discarding the stabilising higher-order contribution can produce runaway moment dynamics.
+
+But these are not demonstrations of a Navier–Stokes-type finite-time singularity.
+
+They demonstrate something more limited:
+
+> A regular underlying system can admit an effective model whose extrapolation becomes qualitatively pathological because dynamically important structure has been omitted.
+
+That is directly relevant to the broader hypothesis, but it should not be overstated.
+
+---
+
+# 15.11 What These Experiments Do Not Establish
+
+The 006 series does **not** establish any of the following:
+
+1. that the Navier–Stokes equations actually develop a physically realised singularity;
+2. that molecular discreteness necessarily regularises such a singularity;
+3. that kinetic theory provides the missing physics in the Navier–Stokes problem;
+4. that memory is the unique or fundamental mechanism of effective closure;
+5. that higher moments are generally inferior to history;
+6. that the universe is fundamentally hierarchical in the proposed philosophical sense;
+7. that quantum mechanics represents a scale-boundary phenomenon;
+8. that any particular proposed underlying theory, including Subquantum Kinetics, supplies the required missing structure.
+
+The experiments are evidence for a narrower proposition:
+
+> **Reduced variables can fail to form a dynamically closed state representation, and temporal or additional state information can sometimes restore predictive closure.**
+
+---
+
+# 15.12 Limitations
+
+Several limitations remain.
+
+### Toy dynamics
+
+The principal 006 system,
+
+\(\dot{x}=x+x^3-x^5\),
+
+is deliberately simple.
+
+Its purpose is to isolate closure effects, not to reproduce fluid turbulence.
+
+### Finite moment hierarchy
+
+The moment hierarchy provides a useful analytical control, but only finitely many moments were tested in the computational comparisons.
+
+For example,
+
+\(\dot{m}_n=n(m_n+m_{n+2}-m_{n+4})\).
+
+Consequently, even apparently large instantaneous moment representations do not constitute an exact closure of the hierarchy.
+
+### Model-class dependence
+
+The conclusions concern the tested ridge-regression models and representations.
+
+Another model class could exploit the instantaneous variables more effectively.
+
+### History length
+
+The best history length in 006i and 006k occurred at the largest tested value.
+
+This means that a characteristic memory timescale or saturation point has not yet been identified.
+
+### Conditional-variance estimation
+
+The conditional uncertainty calculations are subject to finite-sample and high-dimensional estimation effects.
+
+The bootstrap quantifies resampling variability but does not eliminate all estimator bias.
+
+### Hidden-state reconstruction
+
+Failure to reconstruct the particular A/B hidden-state identity does not prove that hidden information cannot be inferred from history.
+
+It only shows that the tested classifier and representation did not reliably distinguish those particular hidden ensembles.
+
+### No physical singularity
+
+Most importantly, none of these experiments connects the toy closure mechanism quantitatively to the proposed Navier–Stokes singularity.
+
+That connection remains an open research question.
+
+---
+
+# 15.13 Current Working Model
+
+The current conceptual model can therefore be summarised as:
+
+\(\boxed{\text{discarded information}\neq\text{pathology}}\)
+
+but potentially:
+
+\(\boxed{\text{discarded information}+\text{insufficient closure}\rightarrow\text{effective-model failure}}\)
+
+and, when the missing information is correlated with recent evolution,
+
+\(\boxed{\text{instantaneous state}+\text{history}\rightarrow\text{improved predictive closure}}\).
+
+This gives the project a more precise formulation than the original intuition.
+
+The question is no longer simply:
+
+> “Does coarse-graining lose information?”
+
+It obviously does.
+
+The more interesting question is:
+
+> **When does the information removed by coarse-graining remain dynamically irrelevant, and when does it become necessary for a closed effective description?**
+
+That is the question that the subsequent work should connect back to physical scale transitions.
+
+---
+
+# 15.14 Status of the 006 Series
+
+The 006 series has now established a controlled toy-model framework for studying dynamical closure.
+
+The main empirical progression is:
+
+\(\text{same coarse state}\)
+
+\(\rightarrow\)
+
+\(\text{different hidden futures}\)
+
+\(\rightarrow\)
+
+\(\text{instantaneous non-closure}\)
+
+\(\rightarrow\)
+
+\(\text{history improves prediction}\)
+
+\(\rightarrow\)
+
+\(\text{conditional uncertainty decreases}\)
+
+\(\rightarrow\)
+
+\(\text{history remains useful under matched complexity}\).
+
+The strongest current result is therefore not that memory is the answer.
+
+It is that **the choice of state representation matters dynamically**.
+
+A representation that is sufficient for describing a system at one level may not remain sufficient for predicting its evolution after information has been discarded.
+
+The next stage of the project should therefore focus on connecting this closure framework back to explicit physical scale transitions, while preserving the distinction between:
+
+- mathematical singularities;
+- failures of effective models;
+- failures of closure;
+- and genuine physical breakdown of a continuum description.
+
+
+# 16. Cross-experiment synthesis
 
 The experiments now suggest a more precise picture than the original hypothesis.
 
@@ -1045,7 +1784,7 @@ A concise statement of the current hypothesis is therefore:
 
 ---
 
-## 16. What the experiments currently establish
+## 17. What the experiments currently establish
 
 Within the toy and simplified kinetic models studied here, the experiments demonstrate that:
 
@@ -1066,7 +1805,7 @@ Taken together, these results support the general study of **dynamical closure a
 
 ---
 
-# 17. What the experiments do not establish
+# 18. What the experiments do not establish
 
 The experiments do **not** establish that:
 
@@ -1084,23 +1823,23 @@ The connection to Navier–Stokes remains a motivation and a future test case, n
 
 ---
 
-# 18. Current limitations
+# 19. Current limitations
 
 Several limitations remain.
 
-### 18.1 Toy models
+### 19.1 Toy models
 
 Most experiments use deliberately simplified dynamical systems.
 
 They are useful because microscopic states and coarse-graining operations can be controlled, but they cannot substitute for a physically grounded kinetic-to-hydrodynamic derivation.
 
-### 18.2 Closure dependence
+### 19.2 Closure dependence
 
 Some experiments use deliberately chosen closures.
 
 A pathological closure can demonstrate that effective descriptions *can* fail, but it does not show that the failure occurs naturally in a particular physical theory.
 
-### 18.3 Numerical effects
+### 19.3 Numerical effects
 
 Resolution, timestep, interpolation, finite sampling, and estimator choice can all influence measured closure error.
 
@@ -1120,7 +1859,7 @@ A true physical claim about continuum breakdown will require a better-founded mo
 
 ---
 
-# 19. Questions remaining
+# 20. Questions remaining
 
 The next experiments should address several increasingly demanding questions:
 
@@ -1138,7 +1877,7 @@ Only after those questions are addressed should candidate underlying-medium theo
 
 ---
 
-# 20. Working conceptual model
+# 21. Working conceptual model
 
 The current working picture is:
 
@@ -1176,7 +1915,7 @@ The scientific programme is to determine whether measurable closure failures pro
 
 ---
 
-# 21. Current status
+# 22. Current status
 
 The project remains exploratory.
 
