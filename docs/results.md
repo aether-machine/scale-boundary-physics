@@ -16,11 +16,11 @@ $$\(\boxed{\Delta_t = C\left[\Phi_{\mathrm{micro}}(t)X_0\right] - \Phi_{\mathrm{
 
 where:
 
-- \(X_0\) is a microscopic initial state,
-- \(\Phi_{\mathrm{micro}}\) is the underlying microscopic evolution,
-- \(C\) is a coarse-graining or projection operation,
-- \(\Phi_{\mathrm{eff}}\) is the proposed effective evolution,
-- \(\Delta_t\) measures the failure of the effective description to reproduce the coarse-grained microscopic dynamics.
+- $$\(X_0\)$$ is a microscopic initial state,
+- $$\(\Phi_{\mathrm{micro}}\)$$ is the underlying microscopic evolution,
+- $$\(C\)$$ is a coarse-graining or projection operation,
+- $$\(\Phi_{\mathrm{eff}}\)$$ is the proposed effective evolution,
+- $$\(\Delta_t\)$$ measures the failure of the effective description to reproduce the coarse-grained microscopic dynamics.
 
 The project has progressively examined several possible sources of this discrepancy:
 
@@ -345,13 +345,13 @@ The detailed dynamics, relaxation mechanism, and representation all matter.
 
 ### 8.1 Experiment 005f — Explicit microscopic length
 
-The next model introduced an explicit spatial smoothing length \(a\) into the kinetic relaxation operator.
+The next model introduced an explicit spatial smoothing length $$\(a\)$$ into the kinetic relaxation operator.
 
 The local relaxation model used the local distribution, while the modified model used a spatially smoothed distribution.
 
-The intention was to introduce a controlled analogue of a microscopic interaction length and investigate whether closure behaviour changed as the hydrodynamic scale \(L\) approached it.
+The intention was to introduce a controlled analogue of a microscopic interaction length and investigate whether closure behaviour changed as the hydrodynamic scale $$\(L\)$$ approached it.
 
-The experiments did not reveal a sharp transition at \(L/a\approx1\).
+The experiments did not reveal a sharp transition at $$\(L/a\approx1\)$$.
 
 Instead, closure differences varied smoothly with the parameters.
 
@@ -409,7 +409,7 @@ Importantly, however:
 
 - there was no singularity;
 - there was no universal threshold;
-- equal values of \(L/a\) did not completely collapse the results;
+- equal values of $$\(L/a\)$$ did not completely collapse the results;
 - the nonlocal operator was a deliberately chosen model.
 
 The experiment therefore supports the possibility of scale-dependent corrections, but does not establish that such corrections regularise Navier–Stokes singularities.
@@ -433,17 +433,17 @@ The underlying dynamics are exactly regular.
 
 However, $$\(x\)$$ does not obey a closed first-order autonomous equation of the form
 
-\[
+$$\[
 \dot{x}=F(x).
-\]
+\]$$
 
 The exact reduced description is instead:
 
-\[
+$$\[
 \ddot{x}+x=0.
-\]
+\]$$
 
-Polynomial approximations to \(F(x)\) failed to remove the fundamental problem: the same value of \(x\) can occur with different values of \(\dot{x}\).
+Polynomial approximations to $$\(F(x)\)$$ failed to remove the fundamental problem: the same value of $$\(x\)$$ can occur with different values of $$\(\dot{x}\)$$.
 
 ### Interpretation
 
