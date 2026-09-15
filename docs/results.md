@@ -12,14 +12,14 @@ The experiments therefore do **not** attempt to reproduce or explain the Navierâ
 
 The central diagnostic is the discrepancy between two operations:
 
-\[
+$$
 \boxed{
 \Delta_t =
 C\left[\Phi_{\mathrm{micro}}(t)X_0\right]
 -
 \Phi_{\mathrm{eff}}(t)C[X_0]
 }
-\]
+$$
 
 where:
 
