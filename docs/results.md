@@ -881,6 +881,186 @@ The size and statistical significance of this reduction are more informative tha
 
 The nearest-neighbour conditional-variance estimator used in this experiment becomes increasingly noisy as history dimension grows. Results must therefore be interpreted cautiously and accompanied by uncertainty estimates.
 
+### 006k — Conditional closure uncertainty
+
+Experiment 006k asked whether the dynamical uncertainty of the retained variables could be reduced by conditioning on their recent history.
+
+The retained variables were:
+
+\[
+H=(m_1,m_2),
+\]
+
+where
+
+\[
+m_1=E[x],
+\qquad
+m_2=E[x^2].
+\]
+
+The microscopic dynamics were:
+
+\[
+\dot{x}=x+x^3-x^5.
+\]
+
+The quantity of interest was the conditional variance of the microscopic coarse derivative:
+
+\[
+\mathcal U_0
+=
+\operatorname{Var}(\dot H\mid H),
+\]
+
+and, for increasingly long histories,
+
+\[
+\mathcal U_k
+=
+\operatorname{Var}
+\left(
+\dot H
+\mid
+H_t,H_{t-1},\ldots,H_{t-k}
+\right).
+\]
+
+The motivation was straightforward.
+
+If the instantaneous coarse state is not dynamically closed, then different microscopic states can produce the same \(H_t\) while having different coarse derivatives.
+
+However, some of the information distinguishing those microscopic states may be encoded in the recent trajectory of \(H\).
+
+If so, conditioning on history should reduce the remaining uncertainty in \(\dot H\).
+
+### Results
+
+The estimated conditional uncertainty decreased systematically with history length:
+
+| History length | Conditional uncertainty | Bootstrap SD | Fractional reduction |
+|---:|---:|---:|---:|
+| 0 | 0.13773 | 0.00272 | 0.0% |
+| 1 | 0.12319 | 0.00341 | 10.6% |
+| 2 | 0.11609 | 0.00371 | 15.7% |
+| 4 | 0.09811 | 0.00265 | 28.8% |
+| 8 | 0.07900 | 0.00137 | 42.6% |
+| 16 | 0.05683 | 0.00161 | 58.7% |
+
+The reduction is considerably larger than the bootstrap uncertainty at each stage.
+
+At history length 16, the estimated uncertainty was approximately:
+
+\[
+\mathcal U_{16}=0.0568,
+\]
+
+compared with:
+
+\[
+\mathcal U_0=0.1377.
+\]
+
+Thus the estimated unexplained variance was reduced by approximately:
+
+\[
+58.7\%.
+\]
+
+### Interpretation
+
+This provides evidence that recent coarse history contains dynamical information that is absent from the instantaneous coarse state.
+
+This is consistent with the intrinsic non-closure observed in 006g and with the improved out-of-sample prediction obtained from the learned memory model in 006i.
+
+The result can be interpreted as follows.
+
+The instantaneous coarse state
+
+\[
+H_t
+\]
+
+does not completely determine the coarse derivative.
+
+But the extended state
+
+\[
+(H_t,H_{t-1},\ldots,H_{t-k})
+\]
+
+contains additional information about that derivative.
+
+In this toy system, temporal information therefore makes the effective representation **more dynamically closed**.
+
+This does not establish that memory is fundamental to physical dynamics. It establishes a narrower and testable result:
+
+> **When the instantaneous coarse variables are insufficient for dynamical closure, recent coarse history can contain information that reduces the remaining uncertainty in their evolution.**
+
+The monotonic decrease across the tested history lengths is particularly suggestive:
+
+\[
+\mathcal U_0
+>
+\mathcal U_1
+>
+\mathcal U_2
+>
+\mathcal U_4
+>
+\mathcal U_8
+>
+\mathcal U_{16}.
+\]
+
+However, the current experiment does not yet establish the characteristic memory timescale. The best history length tested was 16, so it is not known whether the uncertainty has reached a plateau or would continue to decrease with longer histories.
+
+### Relationship to Experiment 006i
+
+Experiment 006i found that a data-driven finite-history model reduced out-of-sample derivative prediction error by approximately 10.8%.
+
+Experiment 006k asks a somewhat more fundamental statistical question: whether conditioning on history reduces the conditional uncertainty itself.
+
+The two results are therefore complementary.
+
+Experiment 006i showed:
+
+> History improves prediction.
+
+Experiment 006k shows:
+
+> History reduces the unexplained conditional variation in the coarse derivative.
+
+Together they provide stronger evidence that temporal information is relevant to the closure problem than either result alone.
+
+### Important caveat
+
+The conditional uncertainty was estimated using nearest-neighbour methods.
+
+As the history length increases, the effective dimension of the conditioning space also increases. This can make non-parametric conditional-variance estimates statistically difficult.
+
+The bootstrap uncertainties reported here provide an indication of estimator variability, but they do not eliminate all finite-sample or high-dimensional estimation effects.
+
+The result should therefore be treated as evidence for a history-dependent closure structure rather than as a precise measurement of a physical memory kernel.
+
+### Next question
+
+The next experiment should determine whether the apparent reduction continues, saturates, or reverses at longer history lengths.
+
+A particularly useful test would compare:
+
+\[
+k=0,1,2,4,8,16,32,64,\ldots
+\]
+
+while controlling sample size and estimator bias.
+
+If the uncertainty approaches a stable plateau, that would provide evidence for a finite effective memory timescale in this model.
+
+If it continues decreasing over increasingly long histories, the appropriate reduced description may require a longer-memory representation.
+
+Either outcome would help determine what additional structure is required to make the coarse dynamics approximately closed.
+
 ---
 
 # 15. Cross-experiment synthesis
