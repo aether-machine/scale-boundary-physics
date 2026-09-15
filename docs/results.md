@@ -56,9 +56,9 @@ A periodic nonlinear lattice system was evolved at the microscopic level and com
 
 The maximum discrepancy between the two descriptions was approximately:
 
-\[
+$$\[
 \Delta_{\max}\approx1.20.
-\]
+\]$$
 
 The discrepancy grew substantially from an initially negligible value.
 
@@ -82,15 +82,15 @@ In particular, larger hidden perturbations and larger coarse-graining blocks gen
 
 The strongest case in the controlled 002b sweep occurred for a hidden amplitude of \(0.40\) and wavelength \(32\), where the maximum discrepancy increased from approximately:
 
-\[
+$$\[
 1.07 \quad (B=2)
-\]
+\]$$
 
 to
 
-\[
+$$\[
 2.29 \quad (B=16).
-\]
+\]$$
 
 ### Important correction
 
@@ -120,23 +120,23 @@ Two microscopic states were constructed so that they produced essentially identi
 
 Initially:
 
-\[
+$$\[
 \|C(X_A)-C(X_B)\|\approx 4.6\times10^{-17}.
-\]
+\]$$
 
 Despite this near-identical coarse representation, the subsequent coarse trajectories diverged.
 
 For the representative block-size-2, amplitude-0.40 case:
 
-\[
+$$\[
 \Delta_{\max}\approx0.369
-\]
+\]$$
 
 and the final separation was approximately:
 
-\[
+$$\[
 \Delta_{\mathrm{final}}\approx0.367.
-\]
+\]$$
 
 ### Interpretation
 
@@ -166,21 +166,21 @@ The basic phase-space representation was therefore numerically well behaved.
 
 Experiment 003b constructed two microscopic ensembles with identical initial kinetic histograms but different microscopic arrangements.
 
-The initial kinetic \(L^2\) difference was exactly zero, while the microscopic states differed substantially.
+The initial kinetic $$\(L^2\)$$ difference was exactly zero, while the microscopic states differed substantially.
 
 During evolution, however, their kinetic representations separated.
 
-The maximum kinetic \(L^2\) separation was approximately:
+The maximum kinetic $$\(L^2\)$$ separation was approximately:
 
-\[
+$$\[
 0.444.
-\]
+\]$$
 
 The maximum difference in magnetisation was approximately:
 
-\[
+$$\[
 0.102.
-\]
+\]$$
 
 ### Interpretation
 
@@ -198,11 +198,11 @@ Experiment 004 introduced a BGK-like kinetic model with a hydrodynamic projectio
 
 Two kinetic states were constructed to have approximately identical hydrodynamic moments while differing in their higher velocity-space structure.
 
-Initially, the hydrodynamic differences were at numerical roundoff level, while the kinetic \(L^2\) difference was approximately:
+Initially, the hydrodynamic differences were at numerical roundoff level, while the kinetic $$\(L^2\)$$ difference was approximately:
 
-\[
+$$\[
 1.83.
-\]
+\]$$
 
 During evolution, the hidden kinetic difference propagated into the hydrodynamic variables.
 
@@ -217,9 +217,9 @@ Maximum differences were approximately:
 
 The final combined difference was approximately:
 
-\[
+$$\[
 0.345.
-\]
+\]$$
 
 ### 5.1 Relaxation dependence
 
@@ -227,27 +227,27 @@ Experiment 004b varied the kinetic relaxation time \(\tau\).
 
 The maximum hydrodynamic discrepancy increased from approximately:
 
-\[
+$$\[
 0.499 \quad (\tau=0.05)
-\]
+\]$$
 
 to:
 
-\[
+$$\[
 0.563 \quad (\tau=1.0).
-\]
+\]$$
 
 The final discrepancy increased from approximately:
 
-\[
+$$\[
 0.245
-\]
+\]$$
 
 to:
 
-\[
+$$\[
 0.446.
-\]
+\]$$
 
 Experiment 004c extended the relaxation sweep toward smaller \(\tau\).
 
@@ -275,21 +275,21 @@ Instead, discrepancy depended strongly on relaxation time and numerical resoluti
 
 Experiment 005b linked relaxation time to characteristic length:
 
-\[
+$$\[
 \tau=\epsilon\frac{L}{v_{\mathrm{ref}}}.
-\]
+\]$$
 
-At fixed \(\epsilon\), the final hydrodynamic discrepancy generally decreased as \(L\) decreased.
+At fixed $$\(\epsilon\)$$, the final hydrodynamic discrepancy generally decreased as $$\(L\)$$ decreased.
 
-For example, at \(\epsilon=0.05\):
+For example, at $$\(\epsilon=0.05\)$$:
 
-\[
+$$\[
 \Delta_{\mathrm{final}}
 =
 0.382,\;0.309,\;0.248,\;0.200,\;0.179,\;0.166,\;0.146
-\]
+\]$$
 
-as \(k\) increased from 1 to 24.
+as $$\(k\)$$ increased from 1 to 24.
 
 This initially appeared suggestive of a scale effect.
 
@@ -299,29 +299,29 @@ Experiment 005c showed that the observed behaviour was reasonably stable under g
 
 For example, at \(k=8,\epsilon=0.05\), the final discrepancy was approximately:
 
-\[
+$$\[
 0.0991,\;0.0998,\;0.1002
-\]
+\]$$
 
-for \(N_X=128,256,512\).
+for $$\(N_X=128,256,512\)$$.
 
 This reduced concern that the observed effect was purely a grid-resolution artefact.
 
-However, the parameter sweep still coupled \(L\) and \(\tau\).
+However, the parameter sweep still coupled $$\(L\)$$ and $$\(\tau\)$$.
 
 ---
 
 ## 7. 005d — Separating characteristic length from relaxation time
 
-Experiment 005d varied \(L\) and \(\tau\) independently.
+Experiment 005d varied $$\(L\)$$ and $$\(\tau\)$$ independently.
 
 This was an important correction to the earlier interpretation.
 
-At fixed \(L\), increasing \(\tau\) produced a strong and generally monotonic increase in final closure discrepancy.
+At fixed $$\(L\)$$, increasing $$\(\tau\)$$ produced a strong and generally monotonic increase in final closure discrepancy.
 
-At fixed \(\tau\), changing \(L\) also mattered, particularly at larger characteristic lengths.
+At fixed $$\(\tau\)$$, changing $$\(L\)$$ also mattered, particularly at larger characteristic lengths.
 
-For example, at \(\tau=0.05\):
+For example, at $$\(\tau=0.05\)$$:
 
 | \(L\) | Final discrepancy |
 |---:|---:|
@@ -376,45 +376,45 @@ The way microscopic information enters the effective dynamics matters.
 
 Experiment 005g compared:
 
-\[
+$$\[
 \frac{Df}{Dt}
 =
 \frac{f_{\mathrm{eq}}[f]-f}{\tau}
-\]
+\]$$
 
 with a nonlocal variant:
 
-\[
+$$\[
 \frac{Df}{Dt}
 =
 \frac{f_{\mathrm{eq}}[\bar f_a]-f}{\tau}.
-\]
+\]$$
 
 The resulting operator difference varied substantially with scale separation.
 
 The maximum instantaneous operator difference ranged from approximately:
 
-\[
+$$\[
 6.6\times10^{-3}
-\]
+\]$$
 
 to:
 
-\[
+$$\[
 3.27.
-\]
+\]$$
 
 The final hydrodynamic discrepancy ranged from approximately:
 
-\[
+$$\[
 6.3\times10^{-5}
-\]
+\]$$
 
 to:
 
-\[
+$$\[
 0.102.
-\]
+\]$$
 
 ### Interpretation
 
@@ -437,16 +437,16 @@ The experiment therefore supports the possibility of scale-dependent corrections
 
 A bounded harmonic oscillator,
 
-\[
+$$\[
 \dot{x}=y,\qquad
 \dot{y}=-x,
-\]
+\]$$
 
-was projected onto \(x\) alone.
+was projected onto $$\(x\)$$ alone.
 
 The underlying dynamics are exactly regular.
 
-However, \(x\) does not obey a closed first-order autonomous equation of the form
+However, $$\(x\)$$ does not obey a closed first-order autonomous equation of the form
 
 \[
 \dot{x}=F(x).
@@ -516,19 +516,19 @@ The pathology depended on an inadequate closure and extrapolation outside its tr
 
 The microscopic system
 
-\[
+$$\[
 \dot{x}=x+x^3-x^5
-\]
+\]$$
 
 produces an exact moment hierarchy:
 
-\[
+$$\[
 \dot{m}_n
 =
 n\left(
 m_n+m_{n+2}-m_{n+4}
 \right).
-\]
+\]$$
 
 Two ensembles were constructed with identical low-order moments but different higher moments.
 
