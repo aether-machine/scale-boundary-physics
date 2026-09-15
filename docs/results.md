@@ -507,13 +507,7 @@ $$\[
 
 produces an exact moment hierarchy:
 
-$$\[
-\dot{m}_n
-=
-n\left(
-m_n+m_{n+2}-m_{n+4}
-\right).
-\]$$
+$$\(\dot{m}_n = n\left(m_n + m_{n+2} - m_{n+4}\right)\)$$
 
 Two ensembles were constructed with identical low-order moments but different higher moments.
 
@@ -741,14 +735,7 @@ The instantaneous model used:
 
 The memory model used:
 
-\[
-\dot H
-=
-A_0H_t+
-A_1H_{t-\tau}
-+\cdots+
-A_kH_{t-k\tau}.
-\]
+$$\(\dot{H} = A_0H_t + A_1H_{t-\tau} + \cdots + A_kH_{t-k\tau}\)$$
 
 Out-of-sample test error was:
 
@@ -853,11 +840,11 @@ $$\[
 
 The quantity of interest was the conditional variance of the microscopic coarse derivative:
 
-$$\(\mathcal{U}_0 = \operatorname{Var}\left(\dot{H}\mid H\right)\)$$
+$$\(\mathcal{U}_0 = \mathrm{Var}\left(\dot{H}\mid H\right)\)$$
 
 and, for increasingly long histories,
 
-$$\(\mathcal{U}_k = \operatorname{Var}\left(\dot{H}\mid H_t,H_{t-1},\ldots,H_{t-k}\right)\)$$
+$$\(\mathcal{U}_k = \mathrm{Var}\left(\dot{H}\mid H_t,H_{t-1},\ldots,H_{t-k}\right)\)$$
 
 The motivation was straightforward.
 
