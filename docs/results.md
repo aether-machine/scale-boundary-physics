@@ -369,19 +369,11 @@ The way microscopic information enters the effective dynamics matters.
 
 Experiment 005g compared:
 
-$$\[
-\frac{Df}{Dt}
-=
-\frac{f_{\mathrm{eq}}[f]-f}{\tau}
-\]$$
+$$\(\frac{Df}{Dt} = \frac{f_{\mathrm{eq}}[f]-f}{\tau}\)$$
 
 with a nonlocal variant:
 
-$$\[
-\frac{Df}{Dt}
-=
-\frac{f_{\mathrm{eq}}[\bar f_a]-f}{\tau}.
-\]$$
+$$\(\frac{Df}{Dt} = \frac{f_{\mathrm{eq}}[\bar{f}_a]-f}{\tau}\)$$
 
 The resulting operator difference varied substantially with scale separation.
 
@@ -861,24 +853,11 @@ $$\[
 
 The quantity of interest was the conditional variance of the microscopic coarse derivative:
 
-$$\[
-\mathcal U_0
-=
-\operatorname{Var}(\dot H\mid H),
-\]$$
+$$\(\mathcal{U}_0 = \operatorname{Var}\left(\dot{H}\mid H\right)\)$$
 
 and, for increasingly long histories,
 
-$$\[
-\mathcal U_k
-=
-\operatorname{Var}
-\left(
-\dot H
-\mid
-H_t,H_{t-1},\ldots,H_{t-k}
-\right).
-\]$$
+$$\(\mathcal{U}_k = \operatorname{Var}\left(\dot{H}\mid H_t,H_{t-1},\ldots,H_{t-k}\right)\)$$
 
 The motivation was straightforward.
 
