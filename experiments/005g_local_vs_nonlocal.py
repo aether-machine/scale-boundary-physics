@@ -678,7 +678,7 @@ def operator_difference(
         tau,
     )
 
-    nonlocal = nonlocal_bgk_rhs(
+    nonlocal_rhs = nonlocal_bgk_rhs(
         f,
         v,
         tau,
@@ -686,7 +686,7 @@ def operator_difference(
     )
 
     difference = (
-        nonlocal
+        nonlocal_rhs
         - local
     )
 
