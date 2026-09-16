@@ -2,6 +2,8 @@
 
 ## Investigating dynamic relationships between physical representations
 
+[![DOI](https://zenodo.org/badge/1368501350.svg)](https://doi.org/10.5281/zenodo.22777264)
+
 This repository explores a simple question:
 
 > **Can a physical system remain well behaved at one level of description while its effective mathematical representation becomes inaccurate or pathological as the system approaches a boundary of scale?**
